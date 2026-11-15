@@ -8,7 +8,11 @@ Controle financeiro pessoal: cada usuário registra onde seu dinheiro está, o q
 
 **Usuário**:
 Pessoa com acesso ao app. Tudo o que registra pertence só a ela e não é visto por nenhum outro usuário.
-_Avoid_: Conta (de acesso), perfil, cliente
+_Avoid_: Conta (de acesso), cliente
+
+**Perfil**:
+Os dados de acesso do próprio usuário: seu e-mail e sua senha.
+_Avoid_: Conta, minha conta, configurações
 
 **Convite**:
 Única forma de alguém se tornar usuário: um e-mail enviado pelo administrador, com um link para criar a senha.
