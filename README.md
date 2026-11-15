@@ -49,10 +49,9 @@ de entrada falsa em <http://127.0.0.1:54324>. Para convidar um usuário local, u
    Na mesma área, em **Email > Minimum password length**, use 8.
 3. Em **Authentication > URL Configuration**, ponha em **Site URL** o endereço publicado
    (`https://minhas-financas.<seu-subdominio>.workers.dev`). Os links dos e-mails usam esse valor.
-4. Em **Authentication > Emails**, cole nos modelos **Invite user** e **Reset password** o
-   conteúdo de `supabase/templates/invite.html` e `supabase/templates/recovery.html`, com os
-   assuntos definidos em `supabase/config.toml`. Sem isso, os links dos e-mails não levam à
-   tela de definir senha.
+4. Os e-mails de convite e de recuperação usam o modelo padrão do Supabase (em inglês): no
+   plano gratuito, personalizá-los exige SMTP próprio. O app entende o link padrão. Se um dia
+   configurar SMTP, cole em **Authentication > Emails** os modelos de `supabase/templates/`.
 5. Anote, em **Project Settings**: o **Project ID**, a **Project URL** e a chave **anon/publishable**.
 6. Crie um token pessoal em <https://supabase.com/dashboard/account/tokens>.
 

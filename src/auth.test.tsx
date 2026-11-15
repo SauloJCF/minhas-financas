@@ -128,6 +128,32 @@ test('convite: link expirado mostra o erro e não grava senha', async () => {
   expect(fake.auth.updateUser).not.toHaveBeenCalled()
 })
 
+test('e-mail padrão: quem chega já logado pelo link só define a senha', async () => {
+  fake.state.currentSession = { user: { email: 'ana@example.com' } }
+  const user = renderAt('/definir-senha?type=invite')
+  await user.type(await screen.findByLabelText('Nova senha'), 'senha-segura-1')
+  await user.type(screen.getByLabelText('Repita a senha'), 'senha-segura-1')
+  await user.click(screen.getByRole('button', { name: 'Criar senha e entrar' }))
+
+  await vi.waitFor(() => expect(fake.auth.updateUser).toHaveBeenCalledWith({ password: 'senha-segura-1' }))
+  expect(fake.auth.verifyOtp).not.toHaveBeenCalled()
+})
+
+test('e-mail padrão: sem sessão e sem token, a senha não é gravada', async () => {
+  const user = renderAt('/definir-senha?type=recovery')
+  await user.type(await screen.findByLabelText('Nova senha'), 'senha-segura-1')
+  await user.type(screen.getByLabelText('Repita a senha'), 'senha-segura-1')
+  await user.click(screen.getByRole('button', { name: 'Salvar nova senha' }))
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('Este link expirou ou já foi usado.')
+  expect(fake.auth.updateUser).not.toHaveBeenCalled()
+})
+
+test('link de e-mail expirado mostra link inválido', async () => {
+  renderAt('/definir-senha?erro=link')
+  expect(await screen.findByRole('heading', { name: 'Link inválido' })).toBeInTheDocument()
+})
+
 test('definir senha sem token mostra link inválido', async () => {
   renderAt('/definir-senha')
   expect(await screen.findByRole('heading', { name: 'Link inválido' })).toBeInTheDocument()
