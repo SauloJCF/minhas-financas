@@ -32,7 +32,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx supabase link --project-ref "${{ vars.SUPABASE_PROJECT_ID }}"
-      - run: npx supabase db push
+      # --remote: sem ele, a CLI 3.x mira o banco local. --yes: sem prompt no CI.
+      - run: npx supabase db push --remote --yes
 
   deploy:
     name: Publicar na Cloudflare
