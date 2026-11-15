@@ -1,0 +1,11 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "minhas-financas",
+  "compatibility_date": "2026-11-15",
+  // Site estático: só os arquivos de dist/, sem código de Worker.
+  "assets": {
+    "directory": "./dist",
+    // Rotas desconhecidas devolvem index.html, para o roteador do React resolver.
+    "not_found_handling": "single-page-application"
+  }
+}
