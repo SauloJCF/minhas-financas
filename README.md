@@ -11,9 +11,14 @@ Requisitos: Node 24, Git e Docker Desktop (para o Supabase local).
 ```bash
 npm install
 npm run db:start        # sobe o Supabase local (Docker precisa estar aberto)
-cp .env.example .env.local   # preencha a anon key mostrada por `npx supabase status`
+cp .env.example .env.development.local   # preencha a anon key mostrada por `npx supabase status`
 npm run dev
 ```
+
+`npm run dev` lê `.env.development.local` e fala com o Supabase **local**. Os e-mails de
+convite e de recuperação enviados em desenvolvimento não saem da máquina: aparecem na caixa
+de entrada falsa em <http://127.0.0.1:54324>. Para convidar um usuário local, use
+**Authentication > Users > Invite user** no Studio local (<http://127.0.0.1:54323>).
 
 | Comando | O que faz |
 | --- | --- |
@@ -41,8 +46,15 @@ npm run dev
    Guarde a **senha do banco** escolhida na criação.
 2. Em **Authentication > Sign In / Providers**, desligue **Allow new users to sign up**.
    A partir daí, só entra quem for convidado em **Authentication > Users > Invite user**.
-3. Anote, em **Project Settings**: o **Project ID**, a **Project URL** e a chave **anon/publishable**.
-4. Crie um token pessoal em <https://supabase.com/dashboard/account/tokens>.
+   Na mesma área, em **Email > Minimum password length**, use 8.
+3. Em **Authentication > URL Configuration**, ponha em **Site URL** o endereço publicado
+   (`https://minhas-financas.<seu-subdominio>.workers.dev`). Os links dos e-mails usam esse valor.
+4. Em **Authentication > Emails**, cole nos modelos **Invite user** e **Reset password** o
+   conteúdo de `supabase/templates/invite.html` e `supabase/templates/recovery.html`, com os
+   assuntos definidos em `supabase/config.toml`. Sem isso, os links dos e-mails não levam à
+   tela de definir senha.
+5. Anote, em **Project Settings**: o **Project ID**, a **Project URL** e a chave **anon/publishable**.
+6. Crie um token pessoal em <https://supabase.com/dashboard/account/tokens>.
 
 ### 2. Cloudflare
 
