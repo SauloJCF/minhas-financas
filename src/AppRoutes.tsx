@@ -1,8 +1,10 @@
 import { Navigate, Route, Routes } from 'react-router'
 import { RequireAuth, RequireSignedOut } from '@/auth/guards'
 import { AppLayout } from '@/components/AppLayout'
-import { ContaEdit } from '@/pages/ContaEdit'
-import { Contas } from '@/pages/Contas'
+import { AccountEdit } from '@/pages/AccountEdit'
+import { Accounts } from '@/pages/Accounts'
+import { Categories } from '@/pages/Categories'
+import { CategoryEdit } from '@/pages/CategoryEdit'
 import { ForgotPassword } from '@/pages/ForgotPassword'
 import { Home } from '@/pages/Home'
 import { Login } from '@/pages/Login'
@@ -23,9 +25,12 @@ export function AppRoutes() {
       <Route element={<RequireAuth />}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Home />} />
-          <Route path="/contas" element={<Contas />} />
-          <Route path="/contas/nova" element={<ContaEdit />} />
-          <Route path="/contas/:id" element={<ContaEdit />} />
+          <Route path="/contas" element={<Accounts />} />
+          <Route path="/contas/nova" element={<AccountEdit />} />
+          <Route path="/contas/:id" element={<AccountEdit />} />
+          <Route path="/categorias" element={<Categories />} />
+          <Route path="/categorias/nova" element={<CategoryEdit />} />
+          <Route path="/categorias/:id" element={<CategoryEdit />} />
           <Route path="/perfil" element={<Profile />} />
         </Route>
       </Route>
