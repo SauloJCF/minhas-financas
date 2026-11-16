@@ -1,6 +1,6 @@
-import { Plus } from 'lucide-react'
+import { Download, Plus } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router'
-import { useAccounts } from '@/accounts/api'
+import { useAccounts, useCardAccountIds } from '@/accounts/api'
 import { useCategories } from '@/categories/api'
 import { ErrorMessage, LoadingMessage } from '@/components/FormPage'
 import { MonthNav } from '@/components/MonthNav'
@@ -31,6 +31,7 @@ export function Transactions() {
   const transactions = useTransactions(month)
   const accounts = useAccounts()
   const categories = useCategories()
+  const cardAccountIds = useCardAccountIds()
 
   function setParam(name: string, value: string) {
     const next = new URLSearchParams(params)
@@ -43,7 +44,7 @@ export function Transactions() {
   const visible = (transactions.data ?? []).filter((transaction) => {
     if (accountFilter && transaction.account_id !== accountFilter) return false
     if (categoryFilter && transaction.category_id !== categoryFilter) return false
-    const status = statusOf(transaction, now)
+    const status = statusOf(transaction, now, cardAccountIds.has(transaction.account_id))
     // "Pendentes" inclui os vencidos, que também são pendentes.
     if (statusFilter === 'pending') return status !== 'paid'
     return !statusFilter || status === statusFilter
@@ -58,12 +59,20 @@ export function Transactions() {
     <div className="grid gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Lançamentos</h1>
-        <Button asChild>
-          <Link to="/lancamentos/novo">
-            <Plus aria-hidden />
-            Novo lançamento
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <Link to="/lancamentos/exportar">
+              <Download aria-hidden />
+              Exportar
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link to="/lancamentos/novo">
+              <Plus aria-hidden />
+              Novo lançamento
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <MonthNav month={month} onChange={(next) => setParam('mes', next)} />

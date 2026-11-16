@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
 import { ColorField, IconField } from '@/components/ColorIconFields'
 import { FormField } from '@/components/FormField'
@@ -14,15 +14,42 @@ import { ACCOUNT_ICONS } from '@/lib/icons'
 import { centavosToInput, parseBRL } from '@/lib/money'
 import { ACCOUNT_TYPES, type Account, type AccountInput } from './api'
 
+/** Um dia do mês digitado, de 1 a 31; `null` se não for. */
+function parseDay(text: string): number | null {
+  if (!/^\d{1,2}$/.test(text.trim())) return null
+  const day = Number(text)
+  return day >= 1 && day <= 31 ? day : null
+}
+
+const DAY_MESSAGE = 'Informe um dia de 1 a 31.'
+
 /** O que o formulário guarda: tudo texto, como foi digitado. */
-const accountSchema = z.object({
-  name: z.string().trim().min(1, 'Informe o nome da conta.').max(60, 'Use até 60 caracteres.'),
-  type: z.enum(['corrente', 'poupanca', 'dinheiro', 'cartao', 'investimento']),
-  initialBalance: z.string().refine((text) => parseBRL(text) !== null, 'Informe um valor, como 1.234,56.'),
-  initialBalanceDate: z.iso.date('Informe a data.'),
-  color: z.string(),
-  icon: z.string(),
-})
+const accountSchema = z
+  .object({
+    name: z.string().trim().min(1, 'Informe o nome da conta.').max(60, 'Use até 60 caracteres.'),
+    type: z.enum(['corrente', 'poupanca', 'dinheiro', 'cartao', 'investimento']),
+    initialBalance: z.string().refine((text) => parseBRL(text) !== null, 'Informe um valor, como 1.234,56.'),
+    initialBalanceDate: z.iso.date('Informe a data.'),
+    color: z.string(),
+    icon: z.string(),
+    closingDay: z.string(),
+    dueDay: z.string(),
+  })
+  // Só cartão tem ciclo de fatura. Os dois dias são opcionais, mas andam juntos.
+  .refine(
+    (values) =>
+      values.type !== 'cartao' ||
+      (!values.closingDay.trim() && !values.dueDay.trim()) ||
+      parseDay(values.closingDay) !== null,
+    { path: ['closingDay'], message: DAY_MESSAGE },
+  )
+  .refine(
+    (values) =>
+      values.type !== 'cartao' ||
+      (!values.closingDay.trim() && !values.dueDay.trim()) ||
+      parseDay(values.dueDay) !== null,
+    { path: ['dueDay'], message: DAY_MESSAGE },
+  )
 type AccountFormValues = z.infer<typeof accountSchema>
 
 type Props = {
@@ -42,6 +69,7 @@ export function AccountForm({ account, onSubmit }: Props) {
     register,
     handleSubmit,
     setValue,
+    control,
     formState: { errors, isSubmitting, dirtyFields },
   } = useForm<AccountFormValues>({
     resolver: zodResolver(accountSchema),
@@ -53,6 +81,8 @@ export function AccountForm({ account, onSubmit }: Props) {
           initialBalanceDate: account.initial_balance_date,
           color: account.color,
           icon: account.icon,
+          closingDay: account.closing_day?.toString() ?? '',
+          dueDay: account.due_day?.toString() ?? '',
         }
       : {
           name: '',
@@ -61,8 +91,11 @@ export function AccountForm({ account, onSubmit }: Props) {
           initialBalanceDate: today(),
           color: COLORS[0].value,
           icon: iconForType('corrente'),
+          closingDay: '',
+          dueDay: '',
         },
   })
+  const isCard = useWatch({ control, name: 'type' }) === 'cartao'
 
   const submit = handleSubmit(async (values) => {
     setFormError(null)
@@ -75,6 +108,8 @@ export function AccountForm({ account, onSubmit }: Props) {
         initial_balance_date: values.initialBalanceDate,
         color: values.color,
         icon: values.icon,
+        closing_day: values.type === 'cartao' ? parseDay(values.closingDay) : null,
+        due_day: values.type === 'cartao' ? parseDay(values.dueDay) : null,
       })
     } catch (error) {
       setFormError(dbErrorMessage(error))
@@ -120,6 +155,31 @@ export function AccountForm({ account, onSubmit }: Props) {
       <p className="-mt-2 text-xs text-muted-foreground">
         Quanto havia na conta nessa data. Em cartão, use um valor negativo para o que já deve.
       </p>
+
+      {isCard && (
+        <>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              label="Dia de fechamento"
+              inputMode="numeric"
+              autoComplete="off"
+              error={errors.closingDay?.message}
+              {...register('closingDay')}
+            />
+            <FormField
+              label="Dia de vencimento"
+              inputMode="numeric"
+              autoComplete="off"
+              error={errors.dueDay?.message}
+              {...register('dueDay')}
+            />
+          </div>
+          <p className="-mt-2 text-xs text-muted-foreground">
+            Com os dois dias, o app monta a fatura do cartão. Compras feitas no dia do fechamento caem na fatura
+            seguinte.
+          </p>
+        </>
+      )}
 
       <ColorField registration={register('color')} />
       <IconField icons={ACCOUNT_ICONS} registration={register('icon')} />

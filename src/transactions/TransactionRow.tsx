@@ -1,9 +1,10 @@
 import { Circle, CircleCheck, Repeat } from 'lucide-react'
 import { Link } from 'react-router'
 import { cn } from 'cn'
+import { useCardAccountIds } from '@/accounts/api'
 import { formatDate, today } from '@/lib/dates'
 import { formatBRL } from '@/lib/money'
-import { statusOf, useSetPaid, type Transaction } from './api'
+import { installmentLabel, statusOf, useSeriesMap, useSetPaid, type Transaction } from './api'
 
 type RowProps = {
   transaction: Transaction
@@ -13,7 +14,10 @@ type RowProps = {
 
 export function TransactionRow({ transaction, accountName, categoryName }: RowProps) {
   const setPaid = useSetPaid()
-  const status = statusOf(transaction, today())
+  const series = useSeriesMap().data?.get(transaction.group_id ?? '')
+  const installment = installmentLabel(transaction, series)
+  const inCard = useCardAccountIds().has(transaction.account_id)
+  const status = statusOf(transaction, today(), inCard)
   const paid = status === 'paid'
   const income = transaction.type === 'income'
 
@@ -40,8 +44,11 @@ export function TransactionRow({ transaction, accountName, categoryName }: RowPr
       >
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-1.5 font-medium">
-            <span className="truncate">{transaction.description}</span>
-            {transaction.group_id && (
+            <span className="truncate">
+              {transaction.description}
+              {installment && ` ${installment}`}
+            </span>
+            {series?.kind === 'recurrence' && (
               <Repeat role="img" aria-label="Recorrente" className="size-3.5 shrink-0 text-muted-foreground" />
             )}
           </span>
@@ -57,7 +64,7 @@ export function TransactionRow({ transaction, accountName, categoryName }: RowPr
           <span
             className={cn('block text-xs', status === 'overdue' ? 'font-medium text-destructive' : 'text-muted-foreground')}
           >
-            {status === 'paid' ? 'Pago' : status === 'overdue' ? 'Vencido' : 'Pendente'}
+            {status === 'paid' ? 'Pago' : status === 'overdue' ? 'Vencido' : inCard ? 'Na fatura' : 'Pendente'}
           </span>
         </span>
       </Link>

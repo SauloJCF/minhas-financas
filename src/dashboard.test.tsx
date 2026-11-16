@@ -132,3 +132,40 @@ test('sem contas, o dashboard convida a criar a primeira', async () => {
   renderAt('/')
   expect(await screen.findByRole('link', { name: 'criando uma conta' })).toHaveAttribute('href', '/contas/nova')
 })
+
+test('sem limites definidos, o início não mostra a seção de orçamento', async () => {
+  renderAt('/')
+  await screen.findByLabelText('Receitas e despesas do mês')
+  expect(screen.queryByRole('heading', { name: 'Orçamento' })).not.toBeInTheDocument()
+})
+
+test('o orçamento mostra o consumo do mês por categoria com limite e destaca a que estourou', async () => {
+  // Alimentação: 250 pago + 50 pendente = 300 de 400. Moradia: 1.500 de 1.200, estourou.
+  db.tables.categories[0].monthly_budget = 40000
+  db.tables.categories[1].monthly_budget = 120000
+  db.tables.categories.push(
+    { id: 'pets', name: 'Pets', type: 'expense', color: '#059669', icon: 'ellipsis', archived: false, monthly_budget: 10000 },
+    { id: 'gone', name: 'Extinta', type: 'expense', color: '#475569', icon: 'ellipsis', archived: true, monthly_budget: 5000 },
+  )
+  const user = renderAt('/')
+
+  const list = await screen.findByRole('list', { name: 'Orçamento por categoria' })
+  const items = () => within(screen.getByRole('list', { name: 'Orçamento por categoria' })).getAllByRole('listitem')
+  // Da mais comprometida para a menos; a arquivada e as sem limite ficam de fora.
+  expect(items().map((item) => item.textContent?.replace(/\s/g, ' '))).toEqual([
+    `Moradia${brl(150000)} de ${brl(120000)}Passou ${brl(30000)} do limite`,
+    `Alimentação${brl(30000)} de ${brl(40000)}Restam ${brl(10000)}`,
+    `Pets${brl(0)} de ${brl(10000)}Restam ${brl(10000)}`,
+  ])
+  expect(within(list).getByRole('progressbar', { name: 'Orçamento de Alimentação' })).toHaveAttribute('aria-valuenow', '75')
+  expect(within(list).getByRole('progressbar', { name: 'Orçamento de Moradia' })).toHaveAttribute('aria-valuenow', '100')
+
+  // Em dezembro só há o IPTU, de 800.
+  await user.click(screen.getByRole('button', { name: 'Mês seguinte' }))
+  await screen.findByRole('heading', { name: 'dezembro de 2026' })
+  await waitFor(() =>
+    expect(items()[0].textContent?.replace(/\s/g, ' ')).toBe(
+      `Moradia${brl(80000)} de ${brl(120000)}Restam ${brl(40000)}`,
+    ),
+  )
+})

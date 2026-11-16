@@ -12,10 +12,17 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { today } from '@/lib/dates'
 import { dbErrorMessage } from '@/lib/db'
-import { centavosToInput, parseBRL } from '@/lib/money'
-import type { Frequency, SeriesScope, Transaction, TransactionInput } from './api'
+import { centavosToInput, formatBRL, parseBRL } from '@/lib/money'
+import { splitInstallments, type Frequency, type SeriesScope, type Transaction, type TransactionInput } from './api'
 
 const isDate = (text: string) => z.iso.date().safeParse(text).success
+
+/** O número de parcelas digitado, se for um inteiro de 2 a 48. */
+function parseInstallments(text: string): number | null {
+  if (!/^\d{1,2}$/.test(text.trim())) return null
+  const count = Number(text)
+  return count >= 2 && count <= 48 ? count : null
+}
 
 /** O que o formulário guarda: tudo como foi digitado. */
 const transactionSchema = z
@@ -29,7 +36,8 @@ const transactionSchema = z
     paid: z.boolean(),
     paidAt: z.string(),
     notes: z.string().trim().max(500, 'Use até 500 caracteres.'),
-    repeat: z.enum(['none', 'recurrence']),
+    repeat: z.enum(['none', 'installment', 'recurrence']),
+    installments: z.string(),
     frequency: z.enum(['weekly', 'monthly', 'yearly']),
     scope: z.enum(['one', 'following']),
   })
@@ -37,6 +45,16 @@ const transactionSchema = z
     path: ['paidAt'],
     message: 'Informe a data do pagamento.',
   })
+  .refine((values) => values.repeat !== 'installment' || parseInstallments(values.installments) !== null, {
+    path: ['installments'],
+    message: 'Informe de 2 a 48 parcelas.',
+  })
+  .refine(
+    (values) =>
+      values.repeat !== 'installment' ||
+      (parseBRL(values.amount) ?? 0) >= (parseInstallments(values.installments) ?? 0),
+    { path: ['amount'], message: 'O total precisa dar pelo menos um centavo por parcela.' },
+  )
 type TransactionFormValues = z.infer<typeof transactionSchema>
 
 type Props = {
@@ -52,6 +70,8 @@ type Props = {
 export type SubmitOptions = {
   /** Ao criar: a frequência da recorrência, ou `null` se o lançamento não se repete. */
   frequency: Frequency | null
+  /** Ao criar: o número de parcelas, ou `null` se o lançamento não é parcelado. O valor é o total. */
+  installments: number | null
   /** Ao editar um lançamento de série: até onde a alteração vai. */
   scope: SeriesScope
 }
@@ -68,6 +88,8 @@ export function TransactionForm({ transaction, accounts, categories, onSubmit }:
 
   // Arquivadas não são oferecidas, mas a que o lançamento já usa continua na lista.
   const offeredAccounts = accounts.filter((account) => !account.archived || account.id === transaction?.account_id)
+  const isCard = (accountId: string) => accounts.some((account) => account.id === accountId && account.type === 'cartao')
+  const defaultAccountId = offeredAccounts.length === 1 ? offeredAccounts[0].id : ''
   const offeredCategories = categories.filter(
     (category) => !category.archived || category.id === transaction?.category_id,
   )
@@ -76,6 +98,7 @@ export function TransactionForm({ transaction, accounts, categories, onSubmit }:
     register,
     handleSubmit,
     setValue,
+    getValues,
     control,
     formState: { errors, isSubmitting },
   } = useForm<TransactionFormValues>({
@@ -92,6 +115,7 @@ export function TransactionForm({ transaction, accounts, categories, onSubmit }:
           paidAt: transaction.paid_at ?? today(),
           notes: transaction.notes ?? '',
           repeat: 'none',
+          installments: '2',
           frequency: 'monthly',
           scope: 'one',
         }
@@ -100,13 +124,15 @@ export function TransactionForm({ transaction, accounts, categories, onSubmit }:
           description: '',
           amount: '',
           // Com uma conta só, não há o que escolher.
-          accountId: offeredAccounts.length === 1 ? offeredAccounts[0].id : '',
+          accountId: defaultAccountId,
           categoryId: '',
           dueDate: today(),
-          paid: false,
+          // Compra no cartão já nasce paga: entra na dívida do cartão na data da compra.
+          paid: isCard(defaultAccountId),
           paidAt: today(),
           notes: '',
           repeat: 'none',
+          installments: '2',
           frequency: 'monthly',
           scope: 'one',
         },
@@ -114,7 +140,13 @@ export function TransactionForm({ transaction, accounts, categories, onSubmit }:
 
   const type = useWatch({ control, name: 'type' })
   const paid = useWatch({ control, name: 'paid' })
+  const inCard = isCard(useWatch({ control, name: 'accountId' }))
   const repeat = useWatch({ control, name: 'repeat' })
+  const amountText = useWatch({ control, name: 'amount' })
+  const installmentsText = useWatch({ control, name: 'installments' })
+  const installments = repeat === 'installment' && !transaction ? parseInstallments(installmentsText) : null
+  const total = parseBRL(amountText) ?? 0
+  const split = installments && total >= installments ? splitInstallments(total, installments) : null
   const inSeries = Boolean(transaction?.group_id)
 
   const submit = handleSubmit(async (values) => {
@@ -122,6 +154,7 @@ export function TransactionForm({ transaction, accounts, categories, onSubmit }:
     try {
       const options: SubmitOptions = {
         frequency: !transaction && values.repeat === 'recurrence' ? values.frequency : null,
+        installments: !transaction && values.repeat === 'installment' ? parseInstallments(values.installments) : null,
         scope: inSeries ? values.scope : 'one',
       }
       const input: TransactionInput = {
@@ -160,17 +193,37 @@ export function TransactionForm({ transaction, accounts, categories, onSubmit }:
 
       <div className="grid grid-cols-2 gap-4">
         <FormField
-          label="Valor (R$)"
+          label={repeat === 'installment' && !transaction ? 'Valor total (R$)' : 'Valor (R$)'}
           inputMode="decimal"
           autoComplete="off"
           placeholder="0,00"
           error={errors.amount?.message}
           {...register('amount')}
         />
-        <FormField label="Vencimento" type="date" error={errors.dueDate?.message} {...register('dueDate')} />
+        <FormField
+          label="Vencimento"
+          type="date"
+          error={errors.dueDate?.message}
+          {...register('dueDate', {
+            // Em compra nova no cartão, o pagamento acompanha a data da compra.
+            onChange: (event) => {
+              if (!transaction && isCard(getValues('accountId'))) setValue('paidAt', event.target.value)
+            },
+          })}
+        />
       </div>
 
-      <SelectField label="Conta" error={errors.accountId?.message} {...register('accountId')}>
+      <SelectField
+        label="Conta"
+        error={errors.accountId?.message}
+        {...register('accountId', {
+          onChange: (event) => {
+            if (transaction || !isCard(event.target.value)) return
+            setValue('paid', true)
+            setValue('paidAt', getValues('dueDate'))
+          },
+        })}
+      >
         <option value="">Escolha…</option>
         {offeredAccounts.map((account) => (
           <option key={account.id} value={account.id}>
@@ -190,6 +243,12 @@ export function TransactionForm({ transaction, accounts, categories, onSubmit }:
           ))}
       </SelectField>
 
+      {inCard && !transaction && (
+        <p className="-mt-2 text-xs text-muted-foreground">
+          Compra no cartão: o vencimento é a data da compra, e ela já entra como paga na dívida do cartão.
+        </p>
+      )}
+
       <div className="grid gap-3 rounded-lg border p-3">
         <label className="flex items-center gap-2 text-sm font-medium">
           <input type="checkbox" className="size-4 accent-primary" {...register('paid')} />
@@ -208,8 +267,26 @@ export function TransactionForm({ transaction, accounts, categories, onSubmit }:
         <div className="grid grid-cols-2 gap-4">
           <SelectField label="Repetir" {...register('repeat')}>
             <option value="none">Não repete</option>
+            <option value="installment">Parcelado</option>
             <option value="recurrence">Recorrente</option>
           </SelectField>
+          {repeat === 'installment' && (
+            <FormField
+              label="Parcelas"
+              inputMode="numeric"
+              autoComplete="off"
+              error={errors.installments?.message}
+              {...register('installments')}
+            />
+          )}
+          {repeat === 'installment' && split && (
+            <p className="col-span-2 text-xs text-muted-foreground">
+              {split.first === split.others
+                ? `${installments} parcelas mensais de ${formatBRL(split.others)}.`
+                : `${installments} parcelas mensais: a primeira de ${formatBRL(split.first)} e as demais de ${formatBRL(split.others)}.`}{' '}
+              {paid ? 'Só a primeira nasce paga.' : ''}
+            </p>
+          )}
           {repeat === 'recurrence' && (
             <SelectField label="Frequência" {...register('frequency')}>
               {FREQUENCIES.map((frequency) => (

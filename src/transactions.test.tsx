@@ -292,7 +292,7 @@ test('criar recorrente gera 12 lançamentos, com o dia 31 caindo no fim dos mese
 
   expect(await screen.findByRole('heading', { name: 'dezembro de 2026' })).toBeInTheDocument()
   await screen.findByRole('link', { name: /Aluguel/ })
-  expect(within(row(/Aluguel/)).getByRole('img', { name: 'Recorrente' })).toBeInTheDocument()
+  expect(await within(row(/Aluguel/)).findByRole('img', { name: 'Recorrente' })).toBeInTheDocument()
 
   expect(db.tables.transaction_series).toMatchObject([{ kind: 'recurrence', frequency: 'monthly', start_date: '2026-12-31' }])
   const created = byNumber()
@@ -381,6 +381,76 @@ test('estender por mais 12 continua a recorrência a partir da última ocorrênc
   expect(series).toHaveLength(16)
   expect(series[4]).toMatchObject({ due_date: '2027-02-10', paid_at: null, amount: 150000, installment_number: 5 })
   expect(new Set(series.map((item) => item.due_date)).size).toBe(16)
+})
+
+test('criar parcelado divide o total, com os centavos que sobram na primeira parcela', async () => {
+  const user = renderAt('/lancamentos/novo')
+  await user.type(await screen.findByLabelText('Descrição'), 'Televisão')
+  await user.selectOptions(screen.getByLabelText('Conta'), 'Nubank')
+  await user.selectOptions(screen.getByLabelText('Categoria'), 'Moradia')
+  await user.selectOptions(screen.getByLabelText('Repetir'), 'Parcelado')
+  await user.type(screen.getByLabelText('Valor total (R$)'), '100')
+  const count = screen.getByLabelText('Parcelas')
+  await user.clear(count)
+  await user.type(count, '3')
+  expect(screen.getByText(/3 parcelas mensais: a primeira de R\$\s33,34 e as demais de R\$\s33,33\./)).toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Criar lançamento' }))
+
+  expect(await screen.findByRole('link', { name: /Televisão \(1\/3\)/ })).toHaveTextContent(`-${brl(3334)}`)
+  expect(within(row(/Televisão/)).queryByRole('img', { name: 'Recorrente' })).not.toBeInTheDocument()
+  expect(db.tables.transaction_series).toMatchObject([{ kind: 'installment', frequency: 'monthly', installment_count: 3 }])
+  const parcels = byNumber()
+  expect(parcels.map((item) => item.amount)).toEqual([3334, 3333, 3333])
+  expect(parcels.map((item) => item.due_date)).toEqual(['2026-11-16', '2026-12-16', '2027-01-16'])
+
+  await user.click(screen.getByRole('button', { name: 'Mês seguinte' }))
+  expect(await screen.findByRole('link', { name: /Televisão \(2\/3\)/ })).toHaveTextContent(`-${brl(3333)}`)
+})
+
+test('parcelado valida o número de parcelas e o total mínimo', async () => {
+  const user = renderAt('/lancamentos/novo')
+  await user.selectOptions(await screen.findByLabelText('Repetir'), 'Parcelado')
+  const count = screen.getByLabelText('Parcelas')
+  await user.clear(count)
+  await user.type(count, '49')
+  await user.type(screen.getByLabelText('Valor total (R$)'), '10')
+  await user.click(screen.getByRole('button', { name: 'Criar lançamento' }))
+  expect(await screen.findByText('Informe de 2 a 48 parcelas.')).toBeInTheDocument()
+
+  await user.clear(count)
+  await user.type(count, '12')
+  await user.clear(screen.getByLabelText('Valor total (R$)'))
+  await user.type(screen.getByLabelText('Valor total (R$)'), '0,05')
+  await user.click(screen.getByRole('button', { name: 'Criar lançamento' }))
+  expect(await screen.findByText('O total precisa dar pelo menos um centavo por parcela.')).toBeInTheDocument()
+  expect(db.tables.transactions).toEqual([])
+})
+
+test('parcela mostra a posição na edição, sem estender, e exclui esta e as próximas', async () => {
+  db.tables.transaction_series = [
+    { id: 'tv', kind: 'installment', frequency: 'monthly', start_date: '2026-08-10', installment_count: 6 },
+  ]
+  db.tables.transactions = [1, 2, 3, 4, 5, 6].map((number) =>
+    transaction({
+      id: `tv-${number}`,
+      description: 'Televisão',
+      amount: 50000,
+      due_date: `2026-${String(7 + number).padStart(2, '0')}-10`,
+      paid_at: number <= 3 ? `2026-${String(7 + number).padStart(2, '0')}-10` : null,
+      group_id: 'tv',
+      installment_number: number,
+    }),
+  )
+  const user = renderAt('/lancamentos/tv-4')
+
+  expect(await screen.findByText('Esta é a parcela 4 de 6.')).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Estender por mais 12' })).not.toBeInTheDocument()
+  expect(screen.queryByLabelText('Repetir')).not.toBeInTheDocument()
+
+  await user.click(screen.getByRole('button', { name: 'Excluir este e os próximos' }))
+  await user.click(screen.getByRole('button', { name: 'Sim, excluir' }))
+  expect(await screen.findByText('Nenhum lançamento neste mês.')).toBeInTheDocument()
+  expect(byNumber().map((item) => item.id)).toEqual(['tv-1', 'tv-2', 'tv-3'])
 })
 
 test('lançamento que não existe (ou é de outro usuário) aparece como não encontrado', async () => {

@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useMemo } from 'react'
 import type { Database, Tables, TablesInsert } from '@/lib/database.types'
 import { useDbMutation, useUserQueryKey } from '@/lib/db'
 import { supabase } from '@/lib/supabase'
@@ -15,7 +16,7 @@ export type Account = Omit<Tables<'accounts_with_balance'>, 'current_balance' | 
 
 export type AccountInput = Pick<
   TablesInsert<'accounts'>,
-  'name' | 'type' | 'initial_balance' | 'initial_balance_date' | 'color' | 'icon'
+  'name' | 'type' | 'initial_balance' | 'initial_balance_date' | 'color' | 'icon' | 'closing_day' | 'due_day'
 >
 
 /** Tipos de conta, na ordem em que agrupam a lista. O ícone é a sugestão ao criar. */
@@ -38,6 +39,15 @@ export function useAccounts() {
       return data as Account[]
     },
   })
+}
+
+/** Os ids das contas cartão. Lançamento pendente em cartão é cobrado pela fatura, não vence sozinho. */
+export function useCardAccountIds(): Set<string> {
+  const { data } = useAccounts()
+  return useMemo(
+    () => new Set(data?.filter((account) => account.type === 'cartao').map((account) => account.id)),
+    [data],
+  )
 }
 
 /** Cria a conta ou, com `id`, altera a que já existe. */

@@ -1,4 +1,4 @@
-import { ArrowLeft, Pencil } from 'lucide-react'
+import { ArrowLeft, Pencil, ReceiptText } from 'lucide-react'
 import { Link, useParams } from 'react-router'
 import { cn } from 'cn'
 import { useAccounts } from '@/accounts/api'
@@ -92,6 +92,14 @@ export function AccountStatement() {
           <h1 className="truncate text-xl font-semibold">{account.name}</h1>
           {account.archived && <p className="text-xs text-muted-foreground">Conta arquivada</p>}
         </div>
+        {account.type === 'cartao' && account.closing_day !== null && (
+          <Button variant="outline" asChild>
+            <Link to={`/contas/${account.id}/fatura`}>
+              <ReceiptText aria-hidden />
+              Fatura
+            </Link>
+          </Button>
+        )}
         <Button variant="outline" asChild>
           <Link to={`/contas/${account.id}/editar`}>
             <Pencil aria-hidden />
@@ -99,6 +107,12 @@ export function AccountStatement() {
           </Link>
         </Button>
       </div>
+
+      {account.type === 'cartao' && account.closing_day === null && (
+        <p className="text-sm text-muted-foreground">
+          Para ver as faturas deste cartão, informe os dias de fechamento e de vencimento na edição da conta.
+        </p>
+      )}
 
       <dl className="grid grid-cols-2 gap-2">
         <div className="rounded-xl border p-3">

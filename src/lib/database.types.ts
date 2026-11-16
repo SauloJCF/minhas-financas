@@ -25,28 +25,28 @@ export type Database = {
           Tables: {
             "accounts": {
                   Row: {
-                    "archived": boolean,"color": string,"created_at": string,"icon": string,"id": string,"initial_balance": number,"initial_balance_date": string,"name": string,"type": Database["public"]['Enums']["account_type"],"user_id": string
+                    "archived": boolean,"closing_day": number | null,"color": string,"created_at": string,"due_day": number | null,"icon": string,"id": string,"initial_balance": number,"initial_balance_date": string,"name": string,"type": Database["public"]['Enums']["account_type"],"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "archived"?: boolean,"color": string,"created_at"?: string,"icon": string,"id"?: string,"initial_balance"?: number,"initial_balance_date"?: string,"name": string,"type": Database["public"]['Enums']["account_type"],"user_id"?: string
+                    "archived"?: boolean,"closing_day"?: number | null,"color": string,"created_at"?: string,"due_day"?: number | null,"icon": string,"id"?: string,"initial_balance"?: number,"initial_balance_date"?: string,"name": string,"type": Database["public"]['Enums']["account_type"],"user_id"?: string
                   }
                   Update: {
-                    "archived"?: boolean,"color"?: string,"created_at"?: string,"icon"?: string,"id"?: string,"initial_balance"?: number,"initial_balance_date"?: string,"name"?: string,"type"?: Database["public"]['Enums']["account_type"],"user_id"?: string
+                    "archived"?: boolean,"closing_day"?: number | null,"color"?: string,"created_at"?: string,"due_day"?: number | null,"icon"?: string,"id"?: string,"initial_balance"?: number,"initial_balance_date"?: string,"name"?: string,"type"?: Database["public"]['Enums']["account_type"],"user_id"?: string
                   }
                   Relationships: [
                     
                   ]
                 },"categories": {
                   Row: {
-                    "archived": boolean,"color": string,"created_at": string,"icon": string,"id": string,"name": string,"type": Database["public"]['Enums']["transaction_type"],"user_id": string
+                    "archived": boolean,"color": string,"created_at": string,"icon": string,"id": string,"monthly_budget": number | null,"name": string,"type": Database["public"]['Enums']["transaction_type"],"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "archived"?: boolean,"color": string,"created_at"?: string,"icon": string,"id"?: string,"name": string,"type": Database["public"]['Enums']["transaction_type"],"user_id"?: string
+                    "archived"?: boolean,"color": string,"created_at"?: string,"icon": string,"id"?: string,"monthly_budget"?: number | null,"name": string,"type": Database["public"]['Enums']["transaction_type"],"user_id"?: string
                   }
                   Update: {
-                    "archived"?: boolean,"color"?: string,"created_at"?: string,"icon"?: string,"id"?: string,"name"?: string,"type"?: Database["public"]['Enums']["transaction_type"],"user_id"?: string
+                    "archived"?: boolean,"color"?: string,"created_at"?: string,"icon"?: string,"id"?: string,"monthly_budget"?: number | null,"name"?: string,"type"?: Database["public"]['Enums']["transaction_type"],"user_id"?: string
                   }
                   Relationships: [
                     
@@ -154,7 +154,7 @@ isOneToOne: false
                   ]
                 },"accounts_with_balance": {
                   Row: {
-                    "archived": boolean,"color": string,"created_at": string,"current_balance": number | null,"forecast_balance": number | null,"icon": string,"id": string,"initial_balance": number,"initial_balance_date": string,"name": string,"type": Database["public"]['Enums']["account_type"],"user_id": string
+                    "archived": boolean,"closing_day": number | null,"color": string,"created_at": string,"current_balance": number | null,"due_day": number | null,"forecast_balance": number | null,"icon": string,"id": string,"initial_balance": number,"initial_balance_date": string,"name": string,"type": Database["public"]['Enums']["account_type"],"user_id": string
                   }
                   ComputedFields: never
                   Relationships: [
@@ -166,11 +166,17 @@ isOneToOne: false
             "create_default_categories":
 { Args: { "target_user_id": string }; Returns: undefined
                            },
+"create_installments":
+{ Args: { "p_account_id": string,"p_amount": number,"p_category_id": string,"p_count": number,"p_description": string,"p_due_date": string,"p_notes": string,"p_paid_at": string,"p_type": Database["public"]['Enums']["transaction_type"] }; Returns: string
+                           },
 "create_recurrence":
 { Args: { "p_account_id": string,"p_amount": number,"p_category_id": string,"p_description": string,"p_due_date": string,"p_frequency": Database["public"]['Enums']["series_frequency"],"p_notes": string,"p_paid_at": string,"p_type": Database["public"]['Enums']["transaction_type"] }; Returns: string
                            },
 "extend_recurrence":
 { Args: { "p_series_id": string }; Returns: undefined
+                           },
+"pay_card_statement":
+{ Args: { "p_account_id": string,"p_date": string,"p_from_account_id": string,"p_period_end": string,"p_period_start": string }; Returns: number
                            },
 "series_due_date":
 { Args: { "frequency": Database["public"]['Enums']["series_frequency"],"occurrence": number,"start_date": string }; Returns: string

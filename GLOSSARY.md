@@ -84,6 +84,30 @@ _Avoid_: Em aberto, previsto, a pagar, a receber
 Lançamento pendente cujo vencimento já passou.
 _Avoid_: Atrasado, em atraso
 
+### Relatórios
+
+**Relatório**:
+Comparativo entre meses: receitas e despesas, ou despesas por categoria. Usa a mesma regra do início, com cada lançamento contando no mês do vencimento.
+_Avoid_: Análise, gráfico, painel
+
+**Exportação**:
+Arquivo CSV com os lançamentos de um período, gerado no próprio aparelho para abrir em planilha.
+_Avoid_: Backup, download, extração
+
+### Orçamento
+
+**Orçamento**:
+O conjunto dos limites mensais do usuário, um por categoria de despesa. Vale para todos os meses até ser alterado.
+_Avoid_: Meta, planejamento, teto de gastos
+
+**Limite mensal**:
+Quanto o usuário pretende gastar por mês em uma categoria de despesa.
+_Avoid_: Orçado, verba, cota
+
+**Consumo**:
+Quanto do limite de uma categoria já foi usado em um mês: a soma das despesas pagas e pendentes com vencimento naquele mês.
+_Avoid_: Gasto realizado, utilização
+
 ### O que se repete
 
 **Série**:
@@ -93,6 +117,14 @@ _Avoid_: Grupo, lote, repetição
 **Recorrência**:
 Série de lançamentos iguais que se repetem sem data para acabar, como aluguel ou salário. Nasce com 12 ocorrências e pode ser estendida.
 _Avoid_: Lançamento fixo, despesa fixa, assinatura
+
+**Parcelamento**:
+Série que divide um valor total em parcelas mensais, com um número fixo de parcelas.
+_Avoid_: Compra parcelada, financiamento, crediário
+
+**Parcela**:
+Cada lançamento de um parcelamento, identificado pela posição e pelo total, como "3/10".
+_Avoid_: Prestação, mensalidade
 
 **Ocorrência**:
 Cada lançamento de uma recorrência.
@@ -105,6 +137,31 @@ _Avoid_: Periodicidade, intervalo
 **Estender**:
 Gerar mais 12 ocorrências de uma recorrência, a partir da última.
 _Avoid_: Renovar, prorrogar
+
+### Cartão de crédito
+
+**Fatura**:
+Os lançamentos de uma conta cartão cujo vencimento cai em um ciclo de fechamento. Não é um registro próprio: é uma forma de ver os lançamentos do cartão.
+_Avoid_: Boleto, conta do cartão, extrato do cartão
+
+**Fechamento**:
+Dia do mês em que a fatura deixa de receber compras. Uma compra feita no dia do fechamento já é da fatura seguinte.
+_Avoid_: Corte, virada, melhor dia de compra
+
+**Vencimento da fatura**:
+Dia do mês em que a fatura deve ser paga.
+_Avoid_: Data de pagamento
+
+**Fatura aberta**:
+Fatura que ainda não chegou ao fechamento e continua recebendo compras.
+_Avoid_: Fatura atual, fatura parcial
+
+**Fatura fechada**:
+Fatura que já passou do fechamento e pode ser paga.
+
+**Pagar a fatura**:
+Marcar como pagos os lançamentos pendentes da fatura e transferir o total dela de outra conta para o cartão.
+_Avoid_: Quitar, liquidar
 
 ### Entre contas
 

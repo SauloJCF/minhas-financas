@@ -25,12 +25,38 @@ export type SeriesInfo = Tables<'transaction_series'> & {
   lastDueDate: string
 }
 
+/** Uma série como está no banco: recorrência ou parcelamento. */
+export type Series = Tables<'transaction_series'>
+
+/** "(3/10)" para uma parcela; vazio para qualquer outro lançamento. */
+export function installmentLabel(
+  transaction: Pick<Transaction, 'installment_number'>,
+  series: Pick<Series, 'kind' | 'installment_count'> | null | undefined,
+): string {
+  if (series?.kind !== 'installment') return ''
+  return `(${transaction.installment_number}/${series.installment_count})`
+}
+
+/** Divide um total em parcelas: os centavos que sobram vão na primeira. */
+export function splitInstallments(total: number, count: number): { first: number; others: number } {
+  const others = Math.floor(total / count)
+  return { first: total - others * (count - 1), others }
+}
+
 /** Pago, pendente ou vencido (pendente cujo vencimento já passou). */
 export type TransactionStatus = 'paid' | 'pending' | 'overdue'
 
-export function statusOf(transaction: Pick<Transaction, 'paid_at' | 'due_date'>, today: string): TransactionStatus {
+/**
+ * `inCard` diz que o lançamento é de uma conta cartão: pendente em cartão nunca é vencido,
+ * porque quem o cobra é a fatura.
+ */
+export function statusOf(
+  transaction: Pick<Transaction, 'paid_at' | 'due_date'>,
+  today: string,
+  inCard = false,
+): TransactionStatus {
   if (transaction.paid_at) return 'paid'
-  return transaction.due_date < today ? 'overdue' : 'pending'
+  return !inCard && transaction.due_date < today ? 'overdue' : 'pending'
 }
 
 /** O valor com o sinal do tipo: receita soma, despesa subtrai. */
@@ -60,6 +86,25 @@ export function useTransactions(month: string) {
   })
 }
 
+/** Os lançamentos com vencimento entre duas datas, inclusive, em ordem de vencimento. */
+export function useTransactionsBetween(first: string, last: string, enabled = true) {
+  return useQuery({
+    queryKey: useUserQueryKey('transactions', 'between', first, last),
+    enabled,
+    queryFn: async (): Promise<Transaction[]> => {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .gte('due_date', first)
+        .lte('due_date', last)
+        .order('due_date')
+        .order('created_at')
+      if (error) throw error
+      return data
+    },
+  })
+}
+
 /** Um lançamento pelo id; `null` se não existe ou é de outro usuário. */
 export function useTransaction(id: string | undefined) {
   return useQuery({
@@ -69,6 +114,18 @@ export function useTransaction(id: string | undefined) {
       const { data, error } = await supabase.from('transactions').select('*').eq('id', id!)
       if (error) throw error
       return data[0] ?? null
+    },
+  })
+}
+
+/** Todas as séries do usuário, por id: a lista de lançamentos as usa para rotular cada linha. */
+export function useSeriesMap() {
+  return useQuery({
+    queryKey: useUserQueryKey('transactions', 'series', 'all'),
+    queryFn: async (): Promise<Map<string, Series>> => {
+      const { data, error } = await supabase.from('transaction_series').select('*')
+      if (error) throw error
+      return new Map(data.map((series) => [series.id, series]))
     },
   })
 }
@@ -99,19 +156,21 @@ type SaveVariables = {
   values: TransactionInput
   /** Ao criar: repete o lançamento nesta frequência. */
   frequency?: Frequency | null
+  /** Ao criar: divide o valor, que é o total, neste número de parcelas mensais. */
+  installments?: number | null
   /** Ao alterar um lançamento de série: `following` leva a mudança aos próximos pendentes. */
   following?: Pick<Transaction, 'group_id' | 'installment_number'>
 }
 
 /**
  * Cria o lançamento ou, com `id`, altera o que já existe. Com `frequency`, cria uma
- * recorrência. Com `following`, a alteração vale também para as ocorrências pendentes
+ * recorrência; com `installments`, um parcelamento. Com `following`, a alteração vale também para as ocorrências pendentes
  * seguintes da série, menos o vencimento e o pagamento, que são de cada uma.
  */
 export function useSaveTransaction() {
-  return useDbMutation(INVALIDATES, async ({ id, values, frequency, following }: SaveVariables) => {
-    if (!id && frequency) {
-      const { error } = await supabase.rpc('create_recurrence', {
+  return useDbMutation(INVALIDATES, async ({ id, values, frequency, installments, following }: SaveVariables) => {
+    if (!id && (frequency || installments)) {
+      const shared = {
         p_type: values.type,
         p_description: values.description,
         p_amount: values.amount,
@@ -121,8 +180,10 @@ export function useSaveTransaction() {
         // Os tipos gerados não sabem que estes dois argumentos aceitam nulo.
         p_paid_at: values.paid_at as string,
         p_notes: values.notes as string,
-        p_frequency: frequency,
-      })
+      }
+      const { error } = installments
+        ? await supabase.rpc('create_installments', { ...shared, p_count: installments })
+        : await supabase.rpc('create_recurrence', { ...shared, p_frequency: frequency! })
       if (error) throw error
       return
     }
