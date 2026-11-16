@@ -1,0 +1,122 @@
+// Supabase falso para os testes de tela: tabelas em memória e o mínimo da API de consultas.
+// Uso: `vi.mock('@/lib/supabase', () => import('@/test/fake-supabase'))` e, no teste, `db`.
+import { vi } from 'vitest'
+
+type Row = Record<string, unknown>
+type Result = { data: unknown; error: unknown }
+type Filter = (row: Row) => boolean
+
+export const db = {
+  tables: {} as Record<string, Row[]>,
+  /** Views: funções que derivam linhas das tabelas. */
+  views: {} as Record<string, () => Row[]>,
+  /** Erro devolvido pela próxima operação, por chave "operação:tabela" (ex.: "delete:accounts"). */
+  errors: {} as Record<string, { code: string } | undefined>,
+  session: { user: { id: 'ana', email: 'ana@example.com' } } as { user: { id: string; email: string } } | null,
+  nextId: 1,
+
+  reset() {
+    db.tables = { accounts: [], categories: [] }
+    db.views = {
+      // O saldo atual é o saldo inicial enquanto não houver lançamentos.
+      accounts_with_balance: () =>
+        db.tables.accounts.map((account) => ({ ...account, current_balance: account.initial_balance })),
+    }
+    db.errors = {}
+    db.session = { user: { id: 'ana', email: 'ana@example.com' } }
+    db.nextId = 1
+  },
+}
+db.reset()
+
+function compare(a: unknown, b: unknown): number {
+  if (typeof a === 'number' && typeof b === 'number') return a - b
+  return String(a ?? '').localeCompare(String(b ?? ''))
+}
+
+function from(table: string) {
+  const filters: Filter[] = []
+  const orders: { column: string; ascending: boolean }[] = []
+  let operation: 'select' | 'insert' | 'update' | 'delete' = 'select'
+  let payload: Row | Row[] = {}
+  const matches = (row: Row) => filters.every((filter) => filter(row))
+
+  function run(): Result {
+    const error = db.errors[`${operation}:${table}`]
+    if (error) return { data: null, error }
+
+    if (operation === 'select') {
+      const source = db.views[table]?.() ?? db.tables[table]
+      if (!source) throw new Error(`tabela inesperada: ${table}`)
+      const rows = source.filter(matches).map((row) => ({ ...row }))
+      for (const { column, ascending } of [...orders].reverse()) {
+        rows.sort((a, b) => compare(a[column], b[column]) * (ascending ? 1 : -1))
+      }
+      return { data: rows, error: null }
+    }
+
+    const rows = db.tables[table]
+    if (!rows) throw new Error(`tabela inesperada: ${table}`)
+    if (operation === 'insert') {
+      for (const values of Array.isArray(payload) ? payload : [payload]) {
+        rows.push({ id: `${table}-${db.nextId++}`, archived: false, ...values })
+      }
+    } else if (operation === 'update') {
+      rows.filter(matches).forEach((row) => Object.assign(row, payload))
+    } else {
+      db.tables[table] = rows.filter((row) => !matches(row))
+    }
+    return { data: null, error: null }
+  }
+
+  const builder = {
+    select: () => builder,
+    order(column: string, options?: { ascending?: boolean }) {
+      orders.push({ column, ascending: options?.ascending ?? true })
+      return builder
+    },
+    insert(values: Row | Row[]) {
+      operation = 'insert'
+      payload = values
+      return builder
+    },
+    update(values: Row) {
+      operation = 'update'
+      payload = values
+      return builder
+    },
+    delete() {
+      operation = 'delete'
+      return builder
+    },
+    eq(column: string, value: unknown) {
+      filters.push((row) => row[column] === value)
+      return builder
+    },
+    gte(column: string, value: string | number) {
+      filters.push((row) => (row[column] as string | number) >= value)
+      return builder
+    },
+    lte(column: string, value: string | number) {
+      filters.push((row) => (row[column] as string | number) <= value)
+      return builder
+    },
+    then(resolve: (value: Result) => unknown, reject?: (reason: unknown) => unknown) {
+      return Promise.resolve()
+        .then(run)
+        .then(resolve, reject)
+    },
+  }
+  return builder
+}
+
+const auth = {
+  onAuthStateChange: vi.fn((callback: (event: string, session: unknown) => void) => {
+    queueMicrotask(() => callback('INITIAL_SESSION', db.session))
+    return { data: { subscription: { unsubscribe: vi.fn() } } }
+  }),
+  updateUser: vi.fn(async () => ({ error: null })),
+  signOut: vi.fn(async () => ({ error: null })),
+}
+
+export const supabase = { auth, from }

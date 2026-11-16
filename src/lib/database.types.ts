@@ -23,16 +23,30 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "contas": {
+            "accounts": {
                   Row: {
-                    "arquivada": boolean,"cor": string,"created_at": string,"data_saldo_inicial": string,"icone": string,"id": string,"nome": string,"saldo_inicial": number,"tipo": Database["public"]['Enums']["tipo_conta"],"user_id": string
+                    "archived": boolean,"color": string,"created_at": string,"icon": string,"id": string,"initial_balance": number,"initial_balance_date": string,"name": string,"type": Database["public"]['Enums']["account_type"],"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "arquivada"?: boolean,"cor": string,"created_at"?: string,"data_saldo_inicial"?: string,"icone": string,"id"?: string,"nome": string,"saldo_inicial"?: number,"tipo": Database["public"]['Enums']["tipo_conta"],"user_id"?: string
+                    "archived"?: boolean,"color": string,"created_at"?: string,"icon": string,"id"?: string,"initial_balance"?: number,"initial_balance_date"?: string,"name": string,"type": Database["public"]['Enums']["account_type"],"user_id"?: string
                   }
                   Update: {
-                    "arquivada"?: boolean,"cor"?: string,"created_at"?: string,"data_saldo_inicial"?: string,"icone"?: string,"id"?: string,"nome"?: string,"saldo_inicial"?: number,"tipo"?: Database["public"]['Enums']["tipo_conta"],"user_id"?: string
+                    "archived"?: boolean,"color"?: string,"created_at"?: string,"icon"?: string,"id"?: string,"initial_balance"?: number,"initial_balance_date"?: string,"name"?: string,"type"?: Database["public"]['Enums']["account_type"],"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"categories": {
+                  Row: {
+                    "archived": boolean,"color": string,"created_at": string,"icon": string,"id": string,"name": string,"type": Database["public"]['Enums']["transaction_type"],"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "archived"?: boolean,"color": string,"created_at"?: string,"icon": string,"id"?: string,"name": string,"type": Database["public"]['Enums']["transaction_type"],"user_id"?: string
+                  }
+                  Update: {
+                    "archived"?: boolean,"color"?: string,"created_at"?: string,"icon"?: string,"id"?: string,"name"?: string,"type"?: Database["public"]['Enums']["transaction_type"],"user_id"?: string
                   }
                   Relationships: [
                     
@@ -40,16 +54,16 @@ export type Database = {
                 }
           }
           Views: {
-            "contas_com_saldo": {
+            "accounts_with_balance": {
                   Row: {
-                    "arquivada": boolean,"cor": string,"created_at": string,"data_saldo_inicial": string,"icone": string,"id": string,"nome": string,"saldo_atual": number,"saldo_inicial": number,"tipo": Database["public"]['Enums']["tipo_conta"],"user_id": string
+                    "archived": boolean,"color": string,"created_at": string,"current_balance": number,"icon": string,"id": string,"initial_balance": number,"initial_balance_date": string,"name": string,"type": Database["public"]['Enums']["account_type"],"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                           "arquivada"?: boolean | null,"cor"?: string | null,"created_at"?: string | null,"data_saldo_inicial"?: string | null,"icone"?: string | null,"id"?: string | null,"nome"?: string | null,"saldo_atual"?: number | null,"saldo_inicial"?: number | null,"tipo"?: Database["public"]['Enums']["tipo_conta"] | null,"user_id"?: string | null
+                           "archived"?: boolean | null,"color"?: string | null,"created_at"?: string | null,"current_balance"?: number | null,"icon"?: string | null,"id"?: string | null,"initial_balance"?: number | null,"initial_balance_date"?: string | null,"name"?: string | null,"type"?: Database["public"]['Enums']["account_type"] | null,"user_id"?: string | null
                          }
                         Update: {
-                           "arquivada"?: boolean | null,"cor"?: string | null,"created_at"?: string | null,"data_saldo_inicial"?: string | null,"icone"?: string | null,"id"?: string | null,"nome"?: string | null,"saldo_atual"?: number | null,"saldo_inicial"?: number | null,"tipo"?: Database["public"]['Enums']["tipo_conta"] | null,"user_id"?: string | null
+                           "archived"?: boolean | null,"color"?: string | null,"created_at"?: string | null,"current_balance"?: number | null,"icon"?: string | null,"id"?: string | null,"initial_balance"?: number | null,"initial_balance_date"?: string | null,"name"?: string | null,"type"?: Database["public"]['Enums']["account_type"] | null,"user_id"?: string | null
                          }
                         Relationships: [
                     
@@ -57,10 +71,12 @@ export type Database = {
                 }
           }
           Functions: {
-            [_ in never]: never
+            "create_default_categories":
+{ Args: { "target_user_id": string }; Returns: undefined
+                           }
           }
           Enums: {
-            "tipo_conta": "corrente"|"poupanca"|"dinheiro"|"cartao"|"investimento"
+            "account_type": "corrente"|"poupanca"|"dinheiro"|"cartao"|"investimento","transaction_type": "income"|"expense"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -180,7 +196,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "tipo_conta": ["corrente", "poupanca", "dinheiro", "cartao", "investimento"]
+            "account_type": ["corrente", "poupanca", "dinheiro", "cartao", "investimento"],"transaction_type": ["income", "expense"]
           }
         }
 } as const

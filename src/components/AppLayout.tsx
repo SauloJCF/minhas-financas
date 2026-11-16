@@ -13,7 +13,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Início', Icon: House, to: '/' },
   { label: 'Lançamentos', Icon: Receipt },
   { label: 'Contas', Icon: Wallet, to: '/contas' },
-  { label: 'Categorias', Icon: Tags },
+  { label: 'Categorias', Icon: Tags, to: '/categorias' },
   { label: 'Perfil', Icon: User, to: '/perfil' },
 ]
 
