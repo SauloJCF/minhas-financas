@@ -101,3 +101,43 @@ test('categoria em uso não é excluída: o app manda arquivar', async () => {
   expect(await screen.findByRole('alert')).toHaveTextContent('não pode ser excluída. Arquive-a.')
   expect(db.tables.categories).toHaveLength(2)
 })
+
+test('categoria de despesa aceita um limite mensal; a de receita não tem o campo', async () => {
+  const user = renderAt('/categorias/nova')
+  const limit = await screen.findByLabelText('Limite mensal (R$, opcional)')
+  await user.click(screen.getByRole('radio', { name: 'Receita' }))
+  expect(screen.queryByLabelText('Limite mensal (R$, opcional)')).not.toBeInTheDocument()
+  expect(limit).not.toBeInTheDocument()
+
+  await user.click(screen.getByRole('radio', { name: 'Despesa' }))
+  await user.type(screen.getByLabelText('Nome'), 'Pets')
+  await user.type(screen.getByLabelText('Limite mensal (R$, opcional)'), '0')
+  await user.click(screen.getByRole('button', { name: 'Criar categoria' }))
+  expect(await screen.findByText('Informe um valor maior que zero, ou deixe em branco.')).toBeInTheDocument()
+
+  await user.clear(screen.getByLabelText('Limite mensal (R$, opcional)'))
+  await user.type(screen.getByLabelText('Limite mensal (R$, opcional)'), '150')
+  await user.click(screen.getByRole('button', { name: 'Criar categoria' }))
+
+  expect(await screen.findByRole('link', { name: /Pets/ })).toBeInTheDocument()
+  expect(db.tables.categories.at(-1)).toMatchObject({ name: 'Pets', type: 'expense', monthly_budget: 15000 })
+})
+
+test('editar altera e remove o limite mensal', async () => {
+  db.tables.categories[0].monthly_budget = 80000
+  const user = renderAt('/categorias/food')
+  const limit = await screen.findByLabelText('Limite mensal (R$, opcional)')
+  expect(limit).toHaveValue('800,00')
+
+  await user.clear(limit)
+  await user.type(limit, '950,50')
+  await user.click(screen.getByRole('button', { name: 'Salvar' }))
+  await screen.findByRole('heading', { name: 'Categorias' })
+  expect(db.tables.categories[0]).toMatchObject({ id: 'food', monthly_budget: 95050 })
+
+  await user.click(screen.getByRole('link', { name: /Alimentação/ }))
+  await user.clear(await screen.findByLabelText('Limite mensal (R$, opcional)'))
+  await user.click(screen.getByRole('button', { name: 'Salvar' }))
+  await screen.findByRole('heading', { name: 'Categorias' })
+  expect(db.tables.categories[0]).toMatchObject({ id: 'food', monthly_budget: null })
+})

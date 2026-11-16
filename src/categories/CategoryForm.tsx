@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
 import { ColorField, IconField } from '@/components/ColorIconFields'
 import { FormField } from '@/components/FormField'
@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { COLORS } from '@/lib/colors'
 import { dbErrorMessage } from '@/lib/db'
 import { CATEGORY_ICONS } from '@/lib/icons'
+import { centavosToInput, parseBRL } from '@/lib/money'
 import { type Category, type CategoryInput } from './api'
 
 const categorySchema = z.object({
@@ -17,6 +18,10 @@ const categorySchema = z.object({
   type: z.enum(['expense', 'income']),
   color: z.string(),
   icon: z.string(),
+  // Texto como foi digitado; vazio quer dizer sem limite.
+  monthlyBudget: z
+    .string()
+    .refine((text) => !text.trim() || (parseBRL(text) ?? 0) > 0, 'Informe um valor maior que zero, ou deixe em branco.'),
 })
 type CategoryFormValues = z.infer<typeof categorySchema>
 
@@ -32,18 +37,31 @@ export function CategoryForm({ category, onSubmit }: Props) {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<CategoryFormValues>({
     resolver: zodResolver(categorySchema),
     defaultValues: category
-      ? { name: category.name, type: category.type, color: category.color, icon: category.icon }
-      : { name: '', type: 'expense', color: COLORS[0].value, icon: 'ellipsis' },
+      ? {
+          name: category.name,
+          type: category.type,
+          color: category.color,
+          icon: category.icon,
+          monthlyBudget: category.monthly_budget ? centavosToInput(category.monthly_budget) : '',
+        }
+      : { name: '', type: 'expense', color: COLORS[0].value, icon: 'ellipsis', monthlyBudget: '' },
   })
+  const isExpense = useWatch({ control, name: 'type' }) === 'expense'
 
   const submit = handleSubmit(async (values) => {
     setFormError(null)
     try {
-      await onSubmit(values)
+      const { monthlyBudget, ...rest } = values
+      await onSubmit({
+        ...rest,
+        // Só categoria de despesa tem limite.
+        monthly_budget: values.type === 'expense' && monthlyBudget.trim() ? parseBRL(monthlyBudget) : null,
+      })
     } catch (error) {
       setFormError(dbErrorMessage(error))
     }
@@ -60,6 +78,21 @@ export function CategoryForm({ category, onSubmit }: Props) {
       )}
 
       <FormField label="Nome" autoComplete="off" error={errors.name?.message} {...register('name')} />
+      {isExpense && (
+        <>
+          <FormField
+            label="Limite mensal (R$, opcional)"
+            inputMode="decimal"
+            autoComplete="off"
+            placeholder="Sem limite"
+            error={errors.monthlyBudget?.message}
+            {...register('monthlyBudget')}
+          />
+          <p className="-mt-2 text-xs text-muted-foreground">
+            Quanto você pretende gastar por mês nesta categoria. O início mostra quanto do limite já foi usado.
+          </p>
+        </>
+      )}
       <ColorField registration={register('color')} />
       <IconField icons={CATEGORY_ICONS} registration={register('icon')} />
 

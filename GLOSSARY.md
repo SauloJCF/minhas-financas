@@ -84,6 +84,20 @@ _Avoid_: Em aberto, previsto, a pagar, a receber
 Lançamento pendente cujo vencimento já passou.
 _Avoid_: Atrasado, em atraso
 
+### Orçamento
+
+**Orçamento**:
+O conjunto dos limites mensais do usuário, um por categoria de despesa. Vale para todos os meses até ser alterado.
+_Avoid_: Meta, planejamento, teto de gastos
+
+**Limite mensal**:
+Quanto o usuário pretende gastar por mês em uma categoria de despesa.
+_Avoid_: Orçado, verba, cota
+
+**Consumo**:
+Quanto do limite de uma categoria já foi usado em um mês: a soma das despesas pagas e pendentes com vencimento naquele mês.
+_Avoid_: Gasto realizado, utilização
+
 ### O que se repete
 
 **Série**:

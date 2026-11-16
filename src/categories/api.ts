@@ -8,7 +8,10 @@ export type TransactionType = Database['public']['Enums']['transaction_type']
 
 export type Category = Tables<'categories'>
 
-export type CategoryInput = Pick<TablesInsert<'categories'>, 'name' | 'type' | 'color' | 'icon'>
+export type CategoryInput = Pick<
+  TablesInsert<'categories'>,
+  'name' | 'type' | 'color' | 'icon' | 'monthly_budget'
+>
 
 /** Os dois tipos, na ordem em que aparecem: despesas primeiro, que são a maioria. */
 export const TRANSACTION_TYPES = [
@@ -31,9 +34,9 @@ export function useCategories() {
 /** Cria a categoria ou, com `id`, altera a que já existe. O tipo não muda depois de criada. */
 export function useSaveCategory() {
   return useDbMutation(['categories'], async ({ id, values }: { id?: string; values: CategoryInput }) => {
-    const { name, color, icon } = values
+    const { name, color, icon, monthly_budget } = values
     const { error } = id
-      ? await supabase.from('categories').update({ name, color, icon }).eq('id', id)
+      ? await supabase.from('categories').update({ name, color, icon, monthly_budget }).eq('id', id)
       : await supabase.from('categories').insert(values)
     if (error) throw error
   })

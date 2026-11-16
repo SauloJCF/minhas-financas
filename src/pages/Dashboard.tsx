@@ -6,7 +6,8 @@ import { ErrorMessage, LoadingMessage } from '@/components/FormPage'
 import { IconBadge } from '@/components/IconBadge'
 import { Money } from '@/components/Money'
 import { MonthNav } from '@/components/MonthNav'
-import { expensesByCategory, monthTotals } from '@/dashboard/summary'
+import { cn } from 'cn'
+import { budgetUsage, expensesByCategory, monthTotals } from '@/dashboard/summary'
 import { formatBRL } from '@/lib/money'
 import { useMonthParam } from '@/lib/month-param'
 import { useTransactions } from '@/transactions/api'
@@ -41,6 +42,7 @@ export function Dashboard() {
   const monthTransactions = transactions.data ?? []
   const totals = monthTotals(monthTransactions)
   const byCategory = expensesByCategory(monthTransactions, categories.data ?? [])
+  const budgets = budgetUsage(monthTransactions, categories.data ?? [])
   const cardAccountIds = useCardAccountIds()
   // Vencidos também são pendentes; a lista já vem em ordem de vencimento. Pendentes de
   // cartão ficam de fora: a cobrança deles é a fatura.
@@ -123,6 +125,50 @@ export function Dashboard() {
               <Money centavos={totals.result} />
             </Tile>
           </dl>
+
+          {budgets.length > 0 && (
+            <section aria-labelledby="budgets" className="grid gap-3">
+              <h2 id="budgets" className="font-medium">
+                Orçamento
+              </h2>
+              <ul aria-label="Orçamento por categoria" className="grid gap-3">
+                {budgets.map((budget) => {
+                  const over = budget.remaining < 0
+                  return (
+                    <li key={budget.id} className="grid gap-1">
+                      <div className="flex items-baseline justify-between gap-3 text-sm">
+                        <span className="min-w-0 truncate">{budget.name}</span>
+                        <span className="shrink-0 tabular-nums text-muted-foreground">
+                          {formatBRL(budget.spent)} de {formatBRL(budget.limit)}
+                        </span>
+                      </div>
+                      <div
+                        role="progressbar"
+                        aria-label={`Orçamento de ${budget.name}`}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={Math.min(100, Math.round((budget.spent / budget.limit) * 100))}
+                        className="h-2 overflow-hidden rounded-full bg-muted"
+                      >
+                        <div
+                          className={cn('h-full rounded-full', over && 'bg-destructive')}
+                          style={{
+                            width: `${Math.min(100, (budget.spent / budget.limit) * 100)}%`,
+                            backgroundColor: over ? undefined : budget.color,
+                          }}
+                        />
+                      </div>
+                      <p className={cn('text-xs', over ? 'font-medium text-destructive' : 'text-muted-foreground')}>
+                        {over
+                          ? `Passou ${formatBRL(-budget.remaining)} do limite`
+                          : `Restam ${formatBRL(budget.remaining)}`}
+                      </p>
+                    </li>
+                  )
+                })}
+              </ul>
+            </section>
+          )}
 
           <section aria-labelledby="by-category" className="grid gap-3">
             <h2 id="by-category" className="font-medium">

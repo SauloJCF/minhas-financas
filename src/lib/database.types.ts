@@ -39,14 +39,14 @@ export type Database = {
                   ]
                 },"categories": {
                   Row: {
-                    "archived": boolean,"color": string,"created_at": string,"icon": string,"id": string,"name": string,"type": Database["public"]['Enums']["transaction_type"],"user_id": string
+                    "archived": boolean,"color": string,"created_at": string,"icon": string,"id": string,"monthly_budget": number | null,"name": string,"type": Database["public"]['Enums']["transaction_type"],"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "archived"?: boolean,"color": string,"created_at"?: string,"icon": string,"id"?: string,"name": string,"type": Database["public"]['Enums']["transaction_type"],"user_id"?: string
+                    "archived"?: boolean,"color": string,"created_at"?: string,"icon": string,"id"?: string,"monthly_budget"?: number | null,"name": string,"type": Database["public"]['Enums']["transaction_type"],"user_id"?: string
                   }
                   Update: {
-                    "archived"?: boolean,"color"?: string,"created_at"?: string,"icon"?: string,"id"?: string,"name"?: string,"type"?: Database["public"]['Enums']["transaction_type"],"user_id"?: string
+                    "archived"?: boolean,"color"?: string,"created_at"?: string,"icon"?: string,"id"?: string,"monthly_budget"?: number | null,"name"?: string,"type"?: Database["public"]['Enums']["transaction_type"],"user_id"?: string
                   }
                   Relationships: [
                     
