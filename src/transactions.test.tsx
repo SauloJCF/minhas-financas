@@ -253,6 +253,136 @@ test('excluir apaga o lançamento de verdade, depois de confirmar', async () => 
   expect(db.tables.transactions).toEqual([])
 })
 
+/** Uma recorrência mensal de aluguel: outubro pago, novembro a janeiro pendentes. */
+function rentSeries() {
+  db.tables.transaction_series = [
+    { id: 'rent', kind: 'recurrence', frequency: 'monthly', start_date: '2026-10-10', installment_count: null },
+  ]
+  db.tables.transactions = ['2026-10-10', '2026-11-10', '2026-12-10', '2027-01-10'].map((dueDate, index) =>
+    transaction({
+      id: `rent-${index + 1}`,
+      description: 'Aluguel',
+      amount: 150000,
+      category_id: 'home',
+      due_date: dueDate,
+      paid_at: index === 0 ? dueDate : null,
+      group_id: 'rent',
+      installment_number: index + 1,
+    }),
+  )
+}
+
+const byNumber = () =>
+  [...db.tables.transactions].sort((a, b) => (a.installment_number as number) - (b.installment_number as number))
+
+test('criar recorrente gera 12 lançamentos, com o dia 31 caindo no fim dos meses curtos', async () => {
+  const user = renderAt('/lancamentos/novo')
+  await user.type(await screen.findByLabelText('Descrição'), 'Aluguel')
+  await user.type(screen.getByLabelText('Valor (R$)'), '1500')
+  await user.selectOptions(screen.getByLabelText('Conta'), 'Nubank')
+  await user.selectOptions(screen.getByLabelText('Categoria'), 'Moradia')
+  await user.clear(screen.getByLabelText('Vencimento'))
+  await user.type(screen.getByLabelText('Vencimento'), '2026-12-31')
+  await user.click(screen.getByRole('checkbox', { name: 'Pago' }))
+
+  expect(screen.queryByLabelText('Frequência')).not.toBeInTheDocument()
+  await user.selectOptions(screen.getByLabelText('Repetir'), 'Recorrente')
+  expect(screen.getByLabelText('Frequência')).toHaveDisplayValue('Mensal')
+  await user.click(screen.getByRole('button', { name: 'Criar lançamento' }))
+
+  expect(await screen.findByRole('heading', { name: 'dezembro de 2026' })).toBeInTheDocument()
+  await screen.findByRole('link', { name: /Aluguel/ })
+  expect(within(row(/Aluguel/)).getByRole('img', { name: 'Recorrente' })).toBeInTheDocument()
+
+  expect(db.tables.transaction_series).toMatchObject([{ kind: 'recurrence', frequency: 'monthly', start_date: '2026-12-31' }])
+  const created = byNumber()
+  expect(created).toHaveLength(12)
+  expect(created.slice(0, 4).map((item) => item.due_date)).toEqual(['2026-12-31', '2027-01-31', '2027-02-28', '2027-03-31'])
+  // Só o primeiro leva o pagamento informado.
+  expect(created.map((item) => item.paid_at)).toEqual(['2026-11-16', ...Array(11).fill(null)])
+  expect(created[11]).toMatchObject({ description: 'Aluguel', amount: 150000, category_id: 'home', installment_number: 12 })
+})
+
+test('lançamento comum não oferece ações de série', async () => {
+  db.tables.transactions = [transaction({ id: 'a', description: 'Mercado' })]
+  renderAt('/lancamentos/a')
+  expect(await screen.findByRole('button', { name: 'Excluir' })).toBeInTheDocument()
+  expect(screen.queryByText('Aplicar a alteração')).not.toBeInTheDocument()
+  expect(screen.queryByLabelText('Repetir')).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Estender por mais 12' })).not.toBeInTheDocument()
+})
+
+test('editar só este não mexe nos outros lançamentos da série', async () => {
+  rentSeries()
+  const user = renderAt('/lancamentos/rent-2')
+  const amount = await screen.findByLabelText('Valor (R$)')
+  expect(screen.getByRole('radio', { name: 'Só a este' })).toBeChecked()
+  await user.clear(amount)
+  await user.type(amount, '1600')
+  await user.click(screen.getByRole('button', { name: 'Salvar' }))
+
+  await screen.findByRole('heading', { name: 'novembro de 2026' })
+  expect(byNumber().map((item) => item.amount)).toEqual([150000, 160000, 150000, 150000])
+})
+
+test('editar este e os próximos muda só os pendentes dali em diante, sem mexer nas datas', async () => {
+  rentSeries()
+  // O de dezembro já foi pago: fica como está.
+  db.tables.transactions[2].paid_at = '2026-12-09'
+  const user = renderAt('/lancamentos/rent-2')
+  const amount = await screen.findByLabelText('Valor (R$)')
+  await user.clear(amount)
+  await user.type(amount, '1600')
+  await user.clear(screen.getByLabelText('Vencimento'))
+  await user.type(screen.getByLabelText('Vencimento'), '2026-11-12')
+  await user.click(screen.getByRole('radio', { name: 'A este e aos próximos' }))
+  await user.click(screen.getByRole('button', { name: 'Salvar' }))
+
+  await screen.findByRole('heading', { name: 'novembro de 2026' })
+  const series = byNumber()
+  expect(series.map((item) => item.amount)).toEqual([150000, 160000, 150000, 160000])
+  expect(series.map((item) => item.due_date)).toEqual(['2026-10-10', '2026-11-12', '2026-12-10', '2027-01-10'])
+  expect(series.map((item) => item.paid_at)).toEqual(['2026-10-10', null, '2026-12-09', null])
+})
+
+test('excluir só este ou este e os próximos; os pagos ficam', async () => {
+  rentSeries()
+  db.tables.transactions[3].paid_at = '2027-01-08'
+  const user = renderAt('/lancamentos/rent-2')
+
+  await user.click(await screen.findByRole('button', { name: 'Excluir este e os próximos' }))
+  expect(screen.getByText(/Os pagos ficam/)).toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Sim, excluir' }))
+
+  expect(await screen.findByText('Nenhum lançamento neste mês.')).toBeInTheDocument()
+  expect(byNumber().map((item) => item.id)).toEqual(['rent-1', 'rent-4'])
+})
+
+test('excluir só este mantém o resto da série', async () => {
+  rentSeries()
+  const user = renderAt('/lancamentos/rent-2')
+  await user.click(await screen.findByRole('button', { name: 'Excluir só este' }))
+  await user.click(screen.getByRole('button', { name: 'Sim, excluir' }))
+
+  expect(await screen.findByText('Nenhum lançamento neste mês.')).toBeInTheDocument()
+  expect(byNumber().map((item) => item.id)).toEqual(['rent-1', 'rent-3', 'rent-4'])
+})
+
+test('estender por mais 12 continua a recorrência a partir da última ocorrência', async () => {
+  rentSeries()
+  const user = renderAt('/lancamentos/rent-2')
+
+  expect(await screen.findByRole('heading', { name: 'Recorrência mensal' })).toBeInTheDocument()
+  expect(screen.getByText(/Este é o lançamento 2 de 4\. O último vence em 10\/01\/2027\./)).toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Estender por mais 12' }))
+
+  expect(await screen.findByText(/Este é o lançamento 2 de 16\. O último vence em 10\/01\/2028\./)).toBeInTheDocument()
+  const series = byNumber()
+  expect(series).toHaveLength(16)
+  expect(series[4]).toMatchObject({ due_date: '2027-02-10', paid_at: null, amount: 150000, installment_number: 5 })
+  expect(new Set(series.map((item) => item.due_date)).size).toBe(16)
+})
+
 test('lançamento que não existe (ou é de outro usuário) aparece como não encontrado', async () => {
   renderAt('/lancamentos/nao-existe')
   expect(await screen.findByRole('alert')).toHaveTextContent('Lançamento não encontrado.')

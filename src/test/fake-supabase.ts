@@ -16,7 +16,7 @@ export const db = {
   nextId: 1,
 
   reset() {
-    db.tables = { accounts: [], categories: [], transactions: [], transfers: [] }
+    db.tables = { accounts: [], categories: [], transactions: [], transfers: [], transaction_series: [] }
     db.views = {
       // A mesma regra da view do banco: pagos (a partir da data do saldo inicial) no saldo
       // atual; pendentes só no previsto.
@@ -160,6 +160,14 @@ function from(table: string) {
       filters.push((row) => (row[column] as string | number) >= value)
       return builder
     },
+    gt(column: string, value: string | number) {
+      filters.push((row) => (row[column] as string | number) > value)
+      return builder
+    },
+    is(column: string, value: null) {
+      filters.push((row) => (row[column] ?? null) === value)
+      return builder
+    },
     lte(column: string, value: string | number) {
       filters.push((row) => (row[column] as string | number) <= value)
       return builder
@@ -173,6 +181,73 @@ function from(table: string) {
   return builder
 }
 
+/** O mesmo cálculo de `series_due_date` no banco: o dia que não existe cai no último do mês. */
+function seriesDueDate(start: string, frequency: string, occurrence: number): string {
+  const [year, month, day] = start.split('-').map(Number)
+  const steps = occurrence - 1
+  const iso = (date: Date) => date.toISOString().slice(0, 10)
+  if (frequency === 'weekly') return iso(new Date(Date.UTC(year, month - 1, day + steps * 7)))
+  const months = month - 1 + (frequency === 'yearly' ? steps * 12 : steps)
+  const lastDay = new Date(Date.UTC(year, months + 1, 0)).getUTCDate()
+  return iso(new Date(Date.UTC(year, months, Math.min(day, lastDay))))
+}
+
+function insertRow(table: string, values: Row) {
+  const id = db.nextId++
+  db.tables[table].push({ id: `${table}-${id}`, created_at: String(id).padStart(6, '0'), ...values })
+  return `${table}-${id}`
+}
+
+/** As funções do banco chamadas pelo app, refeitas em memória. */
+const functions: Record<string, (args: Record<string, unknown>) => unknown> = {
+  create_recurrence(args) {
+    const start = args.p_due_date as string
+    const seriesId = insertRow('transaction_series', {
+      kind: 'recurrence',
+      frequency: args.p_frequency,
+      start_date: start,
+      installment_count: null,
+    })
+    for (let n = 1; n <= 12; n++) {
+      insertRow('transactions', {
+        type: args.p_type,
+        description: args.p_description,
+        amount: args.p_amount,
+        account_id: args.p_account_id,
+        category_id: args.p_category_id,
+        due_date: seriesDueDate(start, args.p_frequency as string, n),
+        paid_at: n === 1 ? args.p_paid_at : null,
+        notes: args.p_notes,
+        group_id: seriesId,
+        installment_number: n,
+      })
+    }
+    return seriesId
+  },
+  extend_recurrence(args) {
+    const series = db.tables.transaction_series.find((row) => row.id === args.p_series_id)!
+    const occurrences = db.tables.transactions.filter((row) => row.group_id === series.id)
+    const last = occurrences.reduce((a, b) => ((a.installment_number as number) > (b.installment_number as number) ? a : b))
+    for (let n = 1; n <= 12; n++) {
+      const number = (last.installment_number as number) + n
+      const { id: _id, created_at: _createdAt, ...copy } = last
+      insertRow('transactions', {
+        ...copy,
+        due_date: seriesDueDate(series.start_date as string, series.frequency as string, number),
+        paid_at: null,
+        installment_number: number,
+      })
+    }
+    return null
+  },
+}
+
+async function rpc(name: string, args: Record<string, unknown>): Promise<Result> {
+  const error = db.errors[`rpc:${name}`]
+  if (error) return { data: null, error }
+  return { data: functions[name](args), error: null }
+}
+
 const auth = {
   onAuthStateChange: vi.fn((callback: (event: string, session: unknown) => void) => {
     queueMicrotask(() => callback('INITIAL_SESSION', db.session))
@@ -182,4 +257,4 @@ const auth = {
   signOut: vi.fn(async () => ({ error: null })),
 }
 
-export const supabase = { auth, from }
+export const supabase = { auth, from, rpc }

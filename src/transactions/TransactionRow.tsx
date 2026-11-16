@@ -1,4 +1,4 @@
-import { Circle, CircleCheck } from 'lucide-react'
+import { Circle, CircleCheck, Repeat } from 'lucide-react'
 import { Link } from 'react-router'
 import { cn } from 'cn'
 import { formatDate, today } from '@/lib/dates'
@@ -39,7 +39,12 @@ export function TransactionRow({ transaction, accountName, categoryName }: RowPr
         className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-2 py-2 hover:bg-muted"
       >
         <span className="min-w-0 flex-1">
-          <span className="block truncate font-medium">{transaction.description}</span>
+          <span className="flex items-center gap-1.5 font-medium">
+            <span className="truncate">{transaction.description}</span>
+            {transaction.group_id && (
+              <Repeat role="img" aria-label="Recorrente" className="size-3.5 shrink-0 text-muted-foreground" />
+            )}
+          </span>
           <span className="block truncate text-xs text-muted-foreground">
             {formatDate(transaction.due_date).slice(0, 5)} · {categoryName} · {accountName}
           </span>

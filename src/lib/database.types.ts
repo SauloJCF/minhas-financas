@@ -51,16 +51,30 @@ export type Database = {
                   Relationships: [
                     
                   ]
-                },"transactions": {
+                },"transaction_series": {
                   Row: {
-                    "account_id": string,"amount": number,"category_id": string,"created_at": string,"description": string,"due_date": string,"id": string,"notes": string | null,"paid_at": string | null,"type": Database["public"]['Enums']["transaction_type"],"user_id": string
+                    "created_at": string,"frequency": Database["public"]['Enums']["series_frequency"],"id": string,"installment_count": number | null,"kind": Database["public"]['Enums']["series_kind"],"start_date": string,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "account_id": string,"amount": number,"category_id": string,"created_at"?: string,"description": string,"due_date": string,"id"?: string,"notes"?: string | null,"paid_at"?: string | null,"type": Database["public"]['Enums']["transaction_type"],"user_id"?: string
+                    "created_at"?: string,"frequency": Database["public"]['Enums']["series_frequency"],"id"?: string,"installment_count"?: number | null,"kind": Database["public"]['Enums']["series_kind"],"start_date": string,"user_id"?: string
                   }
                   Update: {
-                    "account_id"?: string,"amount"?: number,"category_id"?: string,"created_at"?: string,"description"?: string,"due_date"?: string,"id"?: string,"notes"?: string | null,"paid_at"?: string | null,"type"?: Database["public"]['Enums']["transaction_type"],"user_id"?: string
+                    "created_at"?: string,"frequency"?: Database["public"]['Enums']["series_frequency"],"id"?: string,"installment_count"?: number | null,"kind"?: Database["public"]['Enums']["series_kind"],"start_date"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"transactions": {
+                  Row: {
+                    "account_id": string,"amount": number,"category_id": string,"created_at": string,"description": string,"due_date": string,"group_id": string | null,"id": string,"installment_number": number | null,"notes": string | null,"paid_at": string | null,"type": Database["public"]['Enums']["transaction_type"],"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "account_id": string,"amount": number,"category_id": string,"created_at"?: string,"description": string,"due_date": string,"group_id"?: string | null,"id"?: string,"installment_number"?: number | null,"notes"?: string | null,"paid_at"?: string | null,"type": Database["public"]['Enums']["transaction_type"],"user_id"?: string
+                  }
+                  Update: {
+                    "account_id"?: string,"amount"?: number,"category_id"?: string,"created_at"?: string,"description"?: string,"due_date"?: string,"group_id"?: string | null,"id"?: string,"installment_number"?: number | null,"notes"?: string | null,"paid_at"?: string | null,"type"?: Database["public"]['Enums']["transaction_type"],"user_id"?: string
                   }
                   Relationships: [
                     {
@@ -81,6 +95,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "categories"
       referencedColumns: ["id","user_id","type"]
+    },{
+      foreignKeyName: "transactions_series_fkey"
+      columns: ["group_id","user_id"]
+isOneToOne: false
+      referencedRelation: "transaction_series"
+      referencedColumns: ["id","user_id"]
     }
                   ]
                 },"transfers": {
@@ -145,10 +165,19 @@ isOneToOne: false
           Functions: {
             "create_default_categories":
 { Args: { "target_user_id": string }; Returns: undefined
+                           },
+"create_recurrence":
+{ Args: { "p_account_id": string,"p_amount": number,"p_category_id": string,"p_description": string,"p_due_date": string,"p_frequency": Database["public"]['Enums']["series_frequency"],"p_notes": string,"p_paid_at": string,"p_type": Database["public"]['Enums']["transaction_type"] }; Returns: string
+                           },
+"extend_recurrence":
+{ Args: { "p_series_id": string }; Returns: undefined
+                           },
+"series_due_date":
+{ Args: { "frequency": Database["public"]['Enums']["series_frequency"],"occurrence": number,"start_date": string }; Returns: string
                            }
           }
           Enums: {
-            "account_type": "corrente"|"poupanca"|"dinheiro"|"cartao"|"investimento","transaction_type": "income"|"expense"
+            "account_type": "corrente"|"poupanca"|"dinheiro"|"cartao"|"investimento","series_frequency": "weekly"|"monthly"|"yearly","series_kind": "recurrence"|"installment","transaction_type": "income"|"expense"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -268,7 +297,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "account_type": ["corrente", "poupanca", "dinheiro", "cartao", "investimento"],"transaction_type": ["income", "expense"]
+            "account_type": ["corrente", "poupanca", "dinheiro", "cartao", "investimento"],"series_frequency": ["weekly", "monthly", "yearly"],"series_kind": ["recurrence", "installment"],"transaction_type": ["income", "expense"]
           }
         }
 } as const

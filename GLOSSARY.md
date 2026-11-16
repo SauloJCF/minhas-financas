@@ -84,6 +84,30 @@ _Avoid_: Em aberto, previsto, a pagar, a receber
 Lançamento pendente cujo vencimento já passou.
 _Avoid_: Atrasado, em atraso
 
+### O que se repete
+
+**Série**:
+Conjunto de lançamentos criados juntos e ligados entre si: uma recorrência ou um parcelamento. Cada lançamento da série continua sendo um lançamento comum.
+_Avoid_: Grupo, lote, repetição
+
+**Recorrência**:
+Série de lançamentos iguais que se repetem sem data para acabar, como aluguel ou salário. Nasce com 12 ocorrências e pode ser estendida.
+_Avoid_: Lançamento fixo, despesa fixa, assinatura
+
+**Ocorrência**:
+Cada lançamento de uma recorrência.
+_Avoid_: Repetição, instância
+
+**Frequência**:
+De quanto em quanto tempo uma recorrência se repete: semanal, mensal ou anual.
+_Avoid_: Periodicidade, intervalo
+
+**Estender**:
+Gerar mais 12 ocorrências de uma recorrência, a partir da última.
+_Avoid_: Renovar, prorrogar
+
+### Entre contas
+
 **Transferência**:
 Movimento de um valor de uma conta para outra do mesmo usuário. Não é receita nem despesa e não tem estado pendente.
 _Avoid_: Lançamento de transferência, movimentação entre contas
