@@ -46,9 +46,17 @@ export function splitInstallments(total: number, count: number): { first: number
 /** Pago, pendente ou vencido (pendente cujo vencimento já passou). */
 export type TransactionStatus = 'paid' | 'pending' | 'overdue'
 
-export function statusOf(transaction: Pick<Transaction, 'paid_at' | 'due_date'>, today: string): TransactionStatus {
+/**
+ * `inCard` diz que o lançamento é de uma conta cartão: pendente em cartão nunca é vencido,
+ * porque quem o cobra é a fatura.
+ */
+export function statusOf(
+  transaction: Pick<Transaction, 'paid_at' | 'due_date'>,
+  today: string,
+  inCard = false,
+): TransactionStatus {
   if (transaction.paid_at) return 'paid'
-  return transaction.due_date < today ? 'overdue' : 'pending'
+  return !inCard && transaction.due_date < today ? 'overdue' : 'pending'
 }
 
 /** O valor com o sinal do tipo: receita soma, despesa subtrai. */

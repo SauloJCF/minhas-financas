@@ -1,6 +1,6 @@
 import { Plus } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router'
-import { useAccounts } from '@/accounts/api'
+import { useAccounts, useCardAccountIds } from '@/accounts/api'
 import { useCategories } from '@/categories/api'
 import { ErrorMessage, LoadingMessage } from '@/components/FormPage'
 import { MonthNav } from '@/components/MonthNav'
@@ -31,6 +31,7 @@ export function Transactions() {
   const transactions = useTransactions(month)
   const accounts = useAccounts()
   const categories = useCategories()
+  const cardAccountIds = useCardAccountIds()
 
   function setParam(name: string, value: string) {
     const next = new URLSearchParams(params)
@@ -43,7 +44,7 @@ export function Transactions() {
   const visible = (transactions.data ?? []).filter((transaction) => {
     if (accountFilter && transaction.account_id !== accountFilter) return false
     if (categoryFilter && transaction.category_id !== categoryFilter) return false
-    const status = statusOf(transaction, now)
+    const status = statusOf(transaction, now, cardAccountIds.has(transaction.account_id))
     // "Pendentes" inclui os vencidos, que também são pendentes.
     if (statusFilter === 'pending') return status !== 'paid'
     return !statusFilter || status === statusFilter

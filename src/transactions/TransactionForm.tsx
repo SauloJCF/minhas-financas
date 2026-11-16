@@ -88,6 +88,8 @@ export function TransactionForm({ transaction, accounts, categories, onSubmit }:
 
   // Arquivadas não são oferecidas, mas a que o lançamento já usa continua na lista.
   const offeredAccounts = accounts.filter((account) => !account.archived || account.id === transaction?.account_id)
+  const isCard = (accountId: string) => accounts.some((account) => account.id === accountId && account.type === 'cartao')
+  const defaultAccountId = offeredAccounts.length === 1 ? offeredAccounts[0].id : ''
   const offeredCategories = categories.filter(
     (category) => !category.archived || category.id === transaction?.category_id,
   )
@@ -96,6 +98,7 @@ export function TransactionForm({ transaction, accounts, categories, onSubmit }:
     register,
     handleSubmit,
     setValue,
+    getValues,
     control,
     formState: { errors, isSubmitting },
   } = useForm<TransactionFormValues>({
@@ -121,10 +124,11 @@ export function TransactionForm({ transaction, accounts, categories, onSubmit }:
           description: '',
           amount: '',
           // Com uma conta só, não há o que escolher.
-          accountId: offeredAccounts.length === 1 ? offeredAccounts[0].id : '',
+          accountId: defaultAccountId,
           categoryId: '',
           dueDate: today(),
-          paid: false,
+          // Compra no cartão já nasce paga: entra na dívida do cartão na data da compra.
+          paid: isCard(defaultAccountId),
           paidAt: today(),
           notes: '',
           repeat: 'none',
@@ -136,6 +140,7 @@ export function TransactionForm({ transaction, accounts, categories, onSubmit }:
 
   const type = useWatch({ control, name: 'type' })
   const paid = useWatch({ control, name: 'paid' })
+  const inCard = isCard(useWatch({ control, name: 'accountId' }))
   const repeat = useWatch({ control, name: 'repeat' })
   const amountText = useWatch({ control, name: 'amount' })
   const installmentsText = useWatch({ control, name: 'installments' })
@@ -195,10 +200,30 @@ export function TransactionForm({ transaction, accounts, categories, onSubmit }:
           error={errors.amount?.message}
           {...register('amount')}
         />
-        <FormField label="Vencimento" type="date" error={errors.dueDate?.message} {...register('dueDate')} />
+        <FormField
+          label="Vencimento"
+          type="date"
+          error={errors.dueDate?.message}
+          {...register('dueDate', {
+            // Em compra nova no cartão, o pagamento acompanha a data da compra.
+            onChange: (event) => {
+              if (!transaction && isCard(getValues('accountId'))) setValue('paidAt', event.target.value)
+            },
+          })}
+        />
       </div>
 
-      <SelectField label="Conta" error={errors.accountId?.message} {...register('accountId')}>
+      <SelectField
+        label="Conta"
+        error={errors.accountId?.message}
+        {...register('accountId', {
+          onChange: (event) => {
+            if (transaction || !isCard(event.target.value)) return
+            setValue('paid', true)
+            setValue('paidAt', getValues('dueDate'))
+          },
+        })}
+      >
         <option value="">Escolha…</option>
         {offeredAccounts.map((account) => (
           <option key={account.id} value={account.id}>
@@ -217,6 +242,12 @@ export function TransactionForm({ transaction, accounts, categories, onSubmit }:
             </option>
           ))}
       </SelectField>
+
+      {inCard && !transaction && (
+        <p className="-mt-2 text-xs text-muted-foreground">
+          Compra no cartão: o vencimento é a data da compra, e ela já entra como paga na dívida do cartão.
+        </p>
+      )}
 
       <div className="grid gap-3 rounded-lg border p-3">
         <label className="flex items-center gap-2 text-sm font-medium">

@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { Link } from 'react-router'
-import { useAccounts } from '@/accounts/api'
+import { useAccounts, useCardAccountIds } from '@/accounts/api'
 import { useCategories } from '@/categories/api'
 import { ErrorMessage, LoadingMessage } from '@/components/FormPage'
 import { IconBadge } from '@/components/IconBadge'
@@ -41,8 +41,12 @@ export function Dashboard() {
   const monthTransactions = transactions.data ?? []
   const totals = monthTotals(monthTransactions)
   const byCategory = expensesByCategory(monthTransactions, categories.data ?? [])
-  // Vencidos também são pendentes; a lista já vem em ordem de vencimento.
-  const pending = monthTransactions.filter((transaction) => !transaction.paid_at)
+  const cardAccountIds = useCardAccountIds()
+  // Vencidos também são pendentes; a lista já vem em ordem de vencimento. Pendentes de
+  // cartão ficam de fora: a cobrança deles é a fatura.
+  const pending = monthTransactions.filter(
+    (transaction) => !transaction.paid_at && !cardAccountIds.has(transaction.account_id),
+  )
 
   const accountNames = new Map(accounts.data?.map((account) => [account.id, account.name]))
   const categoryNames = new Map(categories.data?.map((category) => [category.id, category.name]))

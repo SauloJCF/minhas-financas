@@ -4,6 +4,7 @@ import { AppLayout } from '@/components/AppLayout'
 import { AccountEdit } from '@/pages/AccountEdit'
 import { Accounts } from '@/pages/Accounts'
 import { AccountStatement } from '@/pages/AccountStatement'
+import { CardStatement } from '@/pages/CardStatement'
 import { Categories } from '@/pages/Categories'
 import { CategoryEdit } from '@/pages/CategoryEdit'
 import { Dashboard } from '@/pages/Dashboard'
@@ -37,6 +38,7 @@ export function AppRoutes() {
           <Route path="/contas/nova" element={<AccountEdit />} />
           <Route path="/contas/:id" element={<AccountStatement />} />
           <Route path="/contas/:id/editar" element={<AccountEdit />} />
+          <Route path="/contas/:id/fatura" element={<CardStatement />} />
           <Route path="/transferencias" element={<Transfers />} />
           <Route path="/transferencias/nova" element={<TransferEdit />} />
           <Route path="/transferencias/:id" element={<TransferEdit />} />

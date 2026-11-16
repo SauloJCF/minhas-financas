@@ -32,6 +32,18 @@ export function monthRange(month: string): { first: string; last: string } {
   return { first: `${month}-01`, last: `${month}-${pad(lastDay)}` }
 }
 
+/** O dia pedido dentro do mês, ou o último dia quando o mês é mais curto. */
+export function dayInMonth(month: string, day: number): string {
+  const lastDay = Number(monthRange(month).last.slice(8))
+  return `${month}-${pad(Math.min(day, lastDay))}`
+}
+
+/** "2026-11-30", +1 -> "2026-12-01" */
+export function addDays(date: string, delta: number): string {
+  const [year, month, day] = date.split('-').map(Number)
+  return new Date(Date.UTC(year, month - 1, day + delta)).toISOString().slice(0, 10)
+}
+
 const monthFormat = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric', timeZone: 'UTC' })
 
 /** "2026-11" -> "novembro de 2026" */

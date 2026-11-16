@@ -114,6 +114,31 @@ _Avoid_: Periodicidade, intervalo
 Gerar mais 12 ocorrências de uma recorrência, a partir da última.
 _Avoid_: Renovar, prorrogar
 
+### Cartão de crédito
+
+**Fatura**:
+Os lançamentos de uma conta cartão cujo vencimento cai em um ciclo de fechamento. Não é um registro próprio: é uma forma de ver os lançamentos do cartão.
+_Avoid_: Boleto, conta do cartão, extrato do cartão
+
+**Fechamento**:
+Dia do mês em que a fatura deixa de receber compras. Uma compra feita no dia do fechamento já é da fatura seguinte.
+_Avoid_: Corte, virada, melhor dia de compra
+
+**Vencimento da fatura**:
+Dia do mês em que a fatura deve ser paga.
+_Avoid_: Data de pagamento
+
+**Fatura aberta**:
+Fatura que ainda não chegou ao fechamento e continua recebendo compras.
+_Avoid_: Fatura atual, fatura parcial
+
+**Fatura fechada**:
+Fatura que já passou do fechamento e pode ser paga.
+
+**Pagar a fatura**:
+Marcar como pagos os lançamentos pendentes da fatura e transferir o total dela de outra conta para o cartão.
+_Avoid_: Quitar, liquidar
+
 ### Entre contas
 
 **Transferência**:
