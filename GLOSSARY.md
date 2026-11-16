@@ -11,8 +11,8 @@ Pessoa com acesso ao app. Tudo o que registra pertence só a ela e não é visto
 _Avoid_: Conta (de acesso), cliente
 
 **Perfil**:
-Os dados de acesso do próprio usuário: seu e-mail e sua senha.
-_Avoid_: Conta, minha conta, configurações
+A tela do próprio usuário: seu e-mail, sua senha e as configurações do assistente.
+_Avoid_: Conta, minha conta
 
 **Convite**:
 Única forma de alguém se tornar usuário: um e-mail enviado pelo administrador, com um link para criar a senha.
@@ -83,6 +83,24 @@ _Avoid_: Em aberto, previsto, a pagar, a receber
 **Vencido**:
 Lançamento pendente cujo vencimento já passou.
 _Avoid_: Atrasado, em atraso
+
+### Assistente
+
+**Assistente**:
+Chat em que o usuário descreve em texto livre o que gastou ou recebeu, e um modelo de IA monta o lançamento.
+_Avoid_: Bot, IA, robô, chat
+
+**Proposta**:
+Lançamento montado pelo assistente e ainda não gravado. Só vira lançamento quando o usuário confirma; descartada, não deixa rastro.
+_Avoid_: Rascunho, sugestão, pré-lançamento
+
+**Chave do OpenRouter**:
+Credencial que o usuário cria no OpenRouter e informa no perfil, para o assistente usar os modelos em seu nome.
+_Avoid_: Token, senha da IA, API key
+
+**Modelo**:
+O modelo de IA que o assistente usa, escolhido pelo usuário entre os que o OpenRouter oferece. Pode ser gratuito ou pago.
+_Avoid_: IA, motor, provedor
 
 ### Relatórios
 

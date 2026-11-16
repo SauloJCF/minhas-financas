@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { AssistantSettingsSection } from '@/assistant/AssistantSettingsForm'
 import { useAuth } from '@/auth/auth-context'
 import { NewPasswordForm } from '@/components/NewPasswordForm'
 import { Button } from '@/components/ui/button'
@@ -31,6 +32,8 @@ export function Profile() {
           </p>
         )}
       </section>
+
+      <AssistantSettingsSection />
 
       <Button variant="outline" onClick={() => void supabase.auth.signOut()}>
         Sair

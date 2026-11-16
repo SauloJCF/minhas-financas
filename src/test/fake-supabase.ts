@@ -16,7 +16,7 @@ export const db = {
   nextId: 1,
 
   reset() {
-    db.tables = { accounts: [], categories: [], transactions: [], transfers: [], transaction_series: [] }
+    db.tables = { accounts: [], categories: [], transactions: [], transfers: [], transaction_series: [], assistant_settings: [] }
     db.views = {
       // A mesma regra da view do banco: pagos (a partir da data do saldo inicial) no saldo
       // atual; pendentes só no previsto.
@@ -140,6 +140,12 @@ function from(table: string) {
     },
     insert(values: Row | Row[]) {
       operation = 'insert'
+      payload = values
+      return builder
+    },
+    /** Como no banco: altera a linha do usuário se ela já existe, senão cria. Só há um usuário por teste. */
+    upsert(values: Row, _options?: { onConflict?: string }) {
+      operation = db.tables[table]?.length ? 'update' : 'insert'
       payload = values
       return builder
     },
