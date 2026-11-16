@@ -6,8 +6,8 @@ import { Accounts } from '@/pages/Accounts'
 import { AccountStatement } from '@/pages/AccountStatement'
 import { Categories } from '@/pages/Categories'
 import { CategoryEdit } from '@/pages/CategoryEdit'
+import { Dashboard } from '@/pages/Dashboard'
 import { ForgotPassword } from '@/pages/ForgotPassword'
-import { Home } from '@/pages/Home'
 import { Login } from '@/pages/Login'
 import { Profile } from '@/pages/Profile'
 import { SetPassword } from '@/pages/SetPassword'
@@ -29,7 +29,7 @@ export function AppRoutes() {
 
       <Route element={<RequireAuth />}>
         <Route element={<AppLayout />}>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Dashboard />} />
           <Route path="/lancamentos" element={<Transactions />} />
           <Route path="/lancamentos/novo" element={<TransactionEdit />} />
           <Route path="/lancamentos/:id" element={<TransactionEdit />} />

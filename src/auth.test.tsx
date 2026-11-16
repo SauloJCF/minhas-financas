@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
@@ -27,11 +28,13 @@ vi.mock('@/lib/supabase', () => ({ supabase: { auth: fake.auth } }))
 
 function renderAt(path: string) {
   render(
-    <AuthProvider>
-      <MemoryRouter initialEntries={[path]}>
-        <AppRoutes />
-      </MemoryRouter>
-    </AuthProvider>,
+    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+      <AuthProvider>
+        <MemoryRouter initialEntries={[path]}>
+          <AppRoutes />
+        </MemoryRouter>
+      </AuthProvider>
+    </QueryClientProvider>,
   )
   return userEvent.setup()
 }
@@ -51,7 +54,7 @@ test('sem sessão, o app leva para o login', async () => {
 test('com sessão, mostra o app e tira a pessoa da tela de login', async () => {
   fake.state.currentSession = { user: { email: 'ana@example.com' } }
   renderAt('/login')
-  expect(await screen.findByRole('heading', { name: 'Tudo pronto' })).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: 'Início' })).toBeInTheDocument()
 })
 
 test('não existe tela de cadastro', async () => {

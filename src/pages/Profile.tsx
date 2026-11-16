@@ -35,6 +35,8 @@ export function Profile() {
       <Button variant="outline" onClick={() => void supabase.auth.signOut()}>
         Sair
       </Button>
+
+      <p className="text-center text-xs text-muted-foreground">versão {__APP_VERSION__}</p>
     </div>
   )
 }
