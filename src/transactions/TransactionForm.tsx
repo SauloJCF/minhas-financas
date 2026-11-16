@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label'
 import { today } from '@/lib/dates'
 import { dbErrorMessage } from '@/lib/db'
 import { centavosToInput, parseBRL } from '@/lib/money'
-import type { Transaction, TransactionInput } from './api'
+import type { Frequency, SeriesScope, Transaction, TransactionInput } from './api'
 
 const isDate = (text: string) => z.iso.date().safeParse(text).success
 
@@ -29,6 +29,9 @@ const transactionSchema = z
     paid: z.boolean(),
     paidAt: z.string(),
     notes: z.string().trim().max(500, 'Use até 500 caracteres.'),
+    repeat: z.enum(['none', 'recurrence']),
+    frequency: z.enum(['weekly', 'monthly', 'yearly']),
+    scope: z.enum(['one', 'following']),
   })
   .refine((values) => !values.paid || isDate(values.paidAt), {
     path: ['paidAt'],
@@ -43,8 +46,21 @@ type Props = {
   accounts: Account[]
   categories: Category[]
   /** Grava o lançamento; se lançar, o erro aparece no formulário. */
-  onSubmit: (values: TransactionInput) => Promise<void>
+  onSubmit: (values: TransactionInput, options: SubmitOptions) => Promise<void>
 }
+
+export type SubmitOptions = {
+  /** Ao criar: a frequência da recorrência, ou `null` se o lançamento não se repete. */
+  frequency: Frequency | null
+  /** Ao editar um lançamento de série: até onde a alteração vai. */
+  scope: SeriesScope
+}
+
+const FREQUENCIES: { value: Frequency; label: string }[] = [
+  { value: 'weekly', label: 'Semanal' },
+  { value: 'monthly', label: 'Mensal' },
+  { value: 'yearly', label: 'Anual' },
+]
 
 export function TransactionForm({ transaction, accounts, categories, onSubmit }: Props) {
   const [formError, setFormError] = useState<string | null>(null)
@@ -75,6 +91,9 @@ export function TransactionForm({ transaction, accounts, categories, onSubmit }:
           paid: transaction.paid_at !== null,
           paidAt: transaction.paid_at ?? today(),
           notes: transaction.notes ?? '',
+          repeat: 'none',
+          frequency: 'monthly',
+          scope: 'one',
         }
       : {
           type: 'expense',
@@ -87,16 +106,25 @@ export function TransactionForm({ transaction, accounts, categories, onSubmit }:
           paid: false,
           paidAt: today(),
           notes: '',
+          repeat: 'none',
+          frequency: 'monthly',
+          scope: 'one',
         },
   })
 
   const type = useWatch({ control, name: 'type' })
   const paid = useWatch({ control, name: 'paid' })
+  const repeat = useWatch({ control, name: 'repeat' })
+  const inSeries = Boolean(transaction?.group_id)
 
   const submit = handleSubmit(async (values) => {
     setFormError(null)
     try {
-      await onSubmit({
+      const options: SubmitOptions = {
+        frequency: !transaction && values.repeat === 'recurrence' ? values.frequency : null,
+        scope: inSeries ? values.scope : 'one',
+      }
+      const input: TransactionInput = {
         type: values.type,
         description: values.description,
         // O schema já garantiu que o texto é um valor positivo.
@@ -106,7 +134,8 @@ export function TransactionForm({ transaction, accounts, categories, onSubmit }:
         due_date: values.dueDate,
         paid_at: values.paid ? values.paidAt : null,
         notes: values.notes || null,
-      })
+      }
+      await onSubmit(input, options)
     } catch (error) {
       setFormError(dbErrorMessage(error))
     }
@@ -175,6 +204,30 @@ export function TransactionForm({ transaction, accounts, categories, onSubmit }:
         )}
       </div>
 
+      {!transaction && (
+        <div className="grid grid-cols-2 gap-4">
+          <SelectField label="Repetir" {...register('repeat')}>
+            <option value="none">Não repete</option>
+            <option value="recurrence">Recorrente</option>
+          </SelectField>
+          {repeat === 'recurrence' && (
+            <SelectField label="Frequência" {...register('frequency')}>
+              {FREQUENCIES.map((frequency) => (
+                <option key={frequency.value} value={frequency.value}>
+                  {frequency.label}
+                </option>
+              ))}
+            </SelectField>
+          )}
+          {repeat === 'recurrence' && (
+            <p className="col-span-2 text-xs text-muted-foreground">
+              Cria 12 lançamentos de uma vez. {paid ? 'Só o primeiro nasce pago; os demais ficam pendentes. ' : ''}
+              Depois você pode estender a recorrência.
+            </p>
+          )}
+        </div>
+      )}
+
       <div className="grid gap-2">
         <Label htmlFor={notesId}>Observação (opcional)</Label>
         <textarea
@@ -186,6 +239,23 @@ export function TransactionForm({ transaction, accounts, categories, onSubmit }:
         />
         {errors.notes && <p className="text-sm text-destructive">{errors.notes.message}</p>}
       </div>
+
+      {inSeries && (
+        <fieldset className="grid gap-2 rounded-lg border p-3">
+          <legend className="px-1 text-sm font-medium">Aplicar a alteração</legend>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="radio" value="one" className="size-4 accent-primary" {...register('scope')} />
+            Só a este
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="radio" value="following" className="size-4 accent-primary" {...register('scope')} />
+            A este e aos próximos
+          </label>
+          <p className="text-xs text-muted-foreground">
+            Dos próximos, só os pendentes mudam. Vencimento e pagamento valem só para este.
+          </p>
+        </fieldset>
+      )}
 
       {formError && <ErrorMessage>{formError}</ErrorMessage>}
       <Button type="submit" size="lg" disabled={isSubmitting}>
