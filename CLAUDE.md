@@ -4,10 +4,10 @@ App pessoal de controle financeiro: PWA em React + Vite + TypeScript, Supabase c
 
 ## Roteiro
 
-O trabalho é feito em fatias verticais, uma por vez. O roteiro vive nas GitHub Issues: a issue "Roteiro da fase 1" (#5) lista as fatias como sub-issues, e a próxima fatia é a primeira sub-issue aberta. Cada issue de fatia traz o escopo e as decisões já tomadas; leia-a antes de começar.
+O trabalho é feito em fatias verticais, uma por vez. O roteiro vive nas GitHub Issues: a issue "Roteiro da fase 2" (#12) lista as fatias como sub-issues, e a próxima fatia é a primeira sub-issue aberta. Cada issue de fatia traz o escopo e as decisões já tomadas; leia-a antes de começar. A fase 1 (#5) está concluída.
 
 ```bash
-gh issue view 5 --json title,body,subIssues
+gh issue view 12 --json title,body,subIssues
 ```
 
 ## Fluxo de trabalho
