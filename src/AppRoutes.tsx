@@ -15,6 +15,7 @@ import { Reports } from '@/pages/Reports'
 import { SetPassword } from '@/pages/SetPassword'
 import { TransactionEdit } from '@/pages/TransactionEdit'
 import { Transactions } from '@/pages/Transactions'
+import { TransactionsExport } from '@/pages/TransactionsExport'
 import { TransferEdit } from '@/pages/TransferEdit'
 import { Transfers } from '@/pages/Transfers'
 
@@ -34,6 +35,7 @@ export function AppRoutes() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/lancamentos" element={<Transactions />} />
           <Route path="/lancamentos/novo" element={<TransactionEdit />} />
+          <Route path="/lancamentos/exportar" element={<TransactionsExport />} />
           <Route path="/lancamentos/:id" element={<TransactionEdit />} />
           <Route path="/contas" element={<Accounts />} />
           <Route path="/contas/nova" element={<AccountEdit />} />

@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react'
+import { Download, Plus } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router'
 import { useAccounts, useCardAccountIds } from '@/accounts/api'
 import { useCategories } from '@/categories/api'
@@ -59,12 +59,20 @@ export function Transactions() {
     <div className="grid gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Lançamentos</h1>
-        <Button asChild>
-          <Link to="/lancamentos/novo">
-            <Plus aria-hidden />
-            Novo lançamento
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <Link to="/lancamentos/exportar">
+              <Download aria-hidden />
+              Exportar
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link to="/lancamentos/novo">
+              <Plus aria-hidden />
+              Novo lançamento
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <MonthNav month={month} onChange={(next) => setParam('mes', next)} />
