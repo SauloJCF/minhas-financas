@@ -37,6 +37,20 @@ export type Database = {
                   Relationships: [
                     
                   ]
+                },"assistant_settings": {
+                  Row: {
+                    "created_at": string,"free_only": boolean,"model": string | null,"openrouter_key": string | null,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"free_only"?: boolean,"model"?: string | null,"openrouter_key"?: string | null,"user_id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"free_only"?: boolean,"model"?: string | null,"openrouter_key"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"categories": {
                   Row: {
                     "archived": boolean,"color": string,"created_at": string,"icon": string,"id": string,"monthly_budget": number | null,"name": string,"type": Database["public"]['Enums']["transaction_type"],"user_id": string

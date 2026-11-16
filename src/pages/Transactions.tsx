@@ -1,4 +1,4 @@
-import { Download, Plus } from 'lucide-react'
+import { Download, Plus, Sparkles } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router'
 import { useAccounts, useCardAccountIds } from '@/accounts/api'
 import { useCategories } from '@/categories/api'
@@ -60,10 +60,17 @@ export function Transactions() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Lançamentos</h1>
         <div className="flex gap-2">
+          {/* No celular os três botões não cabem com texto: os dois secundários ficam só com o ícone. */}
           <Button variant="outline" asChild>
             <Link to="/lancamentos/exportar">
               <Download aria-hidden />
-              Exportar
+              <span className="sr-only sm:not-sr-only">Exportar</span>
+            </Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/assistente">
+              <Sparkles aria-hidden />
+              <span className="sr-only sm:not-sr-only">Assistente</span>
             </Link>
           </Button>
           <Button asChild>
