@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { db } from '@/test/fake-supabase'
 import { brl, renderAt } from '@/test/render'
@@ -65,7 +65,8 @@ test('é a primeira tela e mostra o saldo total e por conta, atual e previsto', 
   // Nubank: 1.000 + 5.000 - 250 = 5.750 atual; menos 1.500, 50 e 800 pendentes = 3.400 previsto.
   // Carteira: 50. A conta arquivada fica de fora.
   const balances = (await screen.findByRole('heading', { name: 'Saldo total' })).closest('section')!
-  expect(balances).toHaveTextContent(brl(580000))
+  // O título aparece antes de as contas carregarem: espera o saldo chegar.
+  await waitFor(() => expect(balances).toHaveTextContent(brl(580000)))
   expect(balances).toHaveTextContent(`previsto ${brl(345000)}`)
 
   const perAccount = within(balances).getByRole('list', { name: 'Saldo por conta' })
