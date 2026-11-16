@@ -4,7 +4,7 @@ import { NewPasswordForm } from '@/components/NewPasswordForm'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 
-export function Account() {
+export function Profile() {
   const { session } = useAuth()
   const [saved, setSaved] = useState(false)
 
@@ -18,7 +18,7 @@ export function Account() {
   return (
     <div className="mx-auto grid max-w-sm gap-8">
       <section className="grid gap-1">
-        <h1 className="text-xl font-semibold">Conta</h1>
+        <h1 className="text-xl font-semibold">Perfil</h1>
         <p className="text-sm text-muted-foreground">{session?.user.email}</p>
       </section>
 
