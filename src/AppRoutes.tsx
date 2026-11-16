@@ -10,6 +10,8 @@ import { Home } from '@/pages/Home'
 import { Login } from '@/pages/Login'
 import { Profile } from '@/pages/Profile'
 import { SetPassword } from '@/pages/SetPassword'
+import { TransactionEdit } from '@/pages/TransactionEdit'
+import { Transactions } from '@/pages/Transactions'
 
 export function AppRoutes() {
   return (
@@ -25,6 +27,9 @@ export function AppRoutes() {
       <Route element={<RequireAuth />}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Home />} />
+          <Route path="/lancamentos" element={<Transactions />} />
+          <Route path="/lancamentos/novo" element={<TransactionEdit />} />
+          <Route path="/lancamentos/:id" element={<TransactionEdit />} />
           <Route path="/contas" element={<Accounts />} />
           <Route path="/contas/nova" element={<AccountEdit />} />
           <Route path="/contas/:id" element={<AccountEdit />} />

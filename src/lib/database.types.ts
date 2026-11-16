@@ -51,21 +51,47 @@ export type Database = {
                   Relationships: [
                     
                   ]
+                },"transactions": {
+                  Row: {
+                    "account_id": string,"amount": number,"category_id": string,"created_at": string,"description": string,"due_date": string,"id": string,"notes": string | null,"paid_at": string | null,"type": Database["public"]['Enums']["transaction_type"],"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "account_id": string,"amount": number,"category_id": string,"created_at"?: string,"description": string,"due_date": string,"id"?: string,"notes"?: string | null,"paid_at"?: string | null,"type": Database["public"]['Enums']["transaction_type"],"user_id"?: string
+                  }
+                  Update: {
+                    "account_id"?: string,"amount"?: number,"category_id"?: string,"created_at"?: string,"description"?: string,"due_date"?: string,"id"?: string,"notes"?: string | null,"paid_at"?: string | null,"type"?: Database["public"]['Enums']["transaction_type"],"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "transactions_account_fkey"
+      columns: ["account_id","user_id"]
+isOneToOne: false
+      referencedRelation: "accounts"
+      referencedColumns: ["id","user_id"]
+    },{
+      foreignKeyName: "transactions_account_fkey"
+      columns: ["account_id","user_id"]
+isOneToOne: false
+      referencedRelation: "accounts_with_balance"
+      referencedColumns: ["id","user_id"]
+    },{
+      foreignKeyName: "transactions_category_fkey"
+      columns: ["category_id","user_id","type"]
+isOneToOne: false
+      referencedRelation: "categories"
+      referencedColumns: ["id","user_id","type"]
+    }
+                  ]
                 }
           }
           Views: {
             "accounts_with_balance": {
                   Row: {
-                    "archived": boolean,"color": string,"created_at": string,"current_balance": number,"icon": string,"id": string,"initial_balance": number,"initial_balance_date": string,"name": string,"type": Database["public"]['Enums']["account_type"],"user_id": string
+                    "archived": boolean,"color": string,"created_at": string,"current_balance": number | null,"forecast_balance": number | null,"icon": string,"id": string,"initial_balance": number,"initial_balance_date": string,"name": string,"type": Database["public"]['Enums']["account_type"],"user_id": string
                   }
                   ComputedFields: never
-                  Insert: {
-                           "archived"?: boolean | null,"color"?: string | null,"created_at"?: string | null,"current_balance"?: number | null,"icon"?: string | null,"id"?: string | null,"initial_balance"?: number | null,"initial_balance_date"?: string | null,"name"?: string | null,"type"?: Database["public"]['Enums']["account_type"] | null,"user_id"?: string | null
-                         }
-                        Update: {
-                           "archived"?: boolean | null,"color"?: string | null,"created_at"?: string | null,"current_balance"?: number | null,"icon"?: string | null,"id"?: string | null,"initial_balance"?: number | null,"initial_balance_date"?: string | null,"name"?: string | null,"type"?: Database["public"]['Enums']["account_type"] | null,"user_id"?: string | null
-                         }
-                        Relationships: [
+                  Relationships: [
                     
                   ]
                 }

@@ -16,11 +16,24 @@ export const db = {
   nextId: 1,
 
   reset() {
-    db.tables = { accounts: [], categories: [] }
+    db.tables = { accounts: [], categories: [], transactions: [] }
     db.views = {
-      // O saldo atual é o saldo inicial enquanto não houver lançamentos.
+      // A mesma regra da view do banco: pagos (a partir da data do saldo inicial) no saldo
+      // atual; pendentes só no previsto.
       accounts_with_balance: () =>
-        db.tables.accounts.map((account) => ({ ...account, current_balance: account.initial_balance })),
+        db.tables.accounts.map((account) => {
+          const signed = (row: Row) => (row.type === 'income' ? 1 : -1) * (row.amount as number)
+          const own = db.tables.transactions.filter((row) => row.account_id === account.id)
+          const sum = (rows: Row[]) => rows.reduce((total, row) => total + signed(row), 0)
+          const current =
+            (account.initial_balance as number) +
+            sum(own.filter((row) => row.paid_at && row.paid_at >= (account.initial_balance_date as string)))
+          return {
+            ...account,
+            current_balance: current,
+            forecast_balance: current + sum(own.filter((row) => !row.paid_at)),
+          }
+        }),
     }
     db.errors = {}
     db.session = { user: { id: 'ana', email: 'ana@example.com' } }
@@ -59,7 +72,8 @@ function from(table: string) {
     if (!rows) throw new Error(`tabela inesperada: ${table}`)
     if (operation === 'insert') {
       for (const values of Array.isArray(payload) ? payload : [payload]) {
-        rows.push({ id: `${table}-${db.nextId++}`, archived: false, ...values })
+        const id = db.nextId++
+        rows.push({ id: `${table}-${id}`, created_at: String(id).padStart(6, '0'), archived: false, ...values })
       }
     } else if (operation === 'update') {
       rows.filter(matches).forEach((row) => Object.assign(row, payload))
