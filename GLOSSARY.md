@@ -84,6 +84,16 @@ _Avoid_: Em aberto, previsto, a pagar, a receber
 Lançamento pendente cujo vencimento já passou.
 _Avoid_: Atrasado, em atraso
 
+### Relatórios
+
+**Relatório**:
+Comparativo entre meses: receitas e despesas, ou despesas por categoria. Usa a mesma regra do início, com cada lançamento contando no mês do vencimento.
+_Avoid_: Análise, gráfico, painel
+
+**Exportação**:
+Arquivo CSV com os lançamentos de um período, gerado no próprio aparelho para abrir em planilha.
+_Avoid_: Backup, download, extração
+
 ### Orçamento
 
 **Orçamento**:

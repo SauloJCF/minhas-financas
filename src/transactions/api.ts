@@ -87,9 +87,10 @@ export function useTransactions(month: string) {
 }
 
 /** Os lançamentos com vencimento entre duas datas, inclusive, em ordem de vencimento. */
-export function useTransactionsBetween(first: string, last: string) {
+export function useTransactionsBetween(first: string, last: string, enabled = true) {
   return useQuery({
     queryKey: useUserQueryKey('transactions', 'between', first, last),
+    enabled,
     queryFn: async (): Promise<Transaction[]> => {
       const { data, error } = await supabase
         .from('transactions')
