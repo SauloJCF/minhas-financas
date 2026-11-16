@@ -11,6 +11,7 @@ import { Dashboard } from '@/pages/Dashboard'
 import { ForgotPassword } from '@/pages/ForgotPassword'
 import { Login } from '@/pages/Login'
 import { Profile } from '@/pages/Profile'
+import { Reports } from '@/pages/Reports'
 import { SetPassword } from '@/pages/SetPassword'
 import { TransactionEdit } from '@/pages/TransactionEdit'
 import { Transactions } from '@/pages/Transactions'
@@ -45,6 +46,7 @@ export function AppRoutes() {
           <Route path="/categorias" element={<Categories />} />
           <Route path="/categorias/nova" element={<CategoryEdit />} />
           <Route path="/categorias/:id" element={<CategoryEdit />} />
+          <Route path="/relatorios" element={<Reports />} />
           <Route path="/perfil" element={<Profile />} />
         </Route>
       </Route>

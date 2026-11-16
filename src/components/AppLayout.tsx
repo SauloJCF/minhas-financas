@@ -1,4 +1,4 @@
-import { House, Receipt, Tags, User, Wallet, type LucideIcon } from 'lucide-react'
+import { ChartColumn, House, Receipt, Tags, User, Wallet, type LucideIcon } from 'lucide-react'
 import { Link, NavLink, Outlet } from 'react-router'
 import { cn } from 'cn'
 
@@ -14,12 +14,13 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Lançamentos', Icon: Receipt, to: '/lancamentos' },
   { label: 'Contas', Icon: Wallet, to: '/contas' },
   { label: 'Categorias', Icon: Tags, to: '/categorias' },
+  { label: 'Relatórios', Icon: ChartColumn, to: '/relatorios' },
   { label: 'Perfil', Icon: User, to: '/perfil' },
 ]
 
 // No celular os itens são colunas (ícone sobre o rótulo); no desktop, linhas do menu lateral.
 const itemClass =
-  'flex flex-1 flex-col items-center gap-1 px-1 py-2 text-xs md:flex-none md:flex-row md:gap-3 md:rounded-lg md:px-3 md:text-sm'
+  'flex min-w-0 flex-1 flex-col items-center gap-1 px-0.5 py-2 text-[11px] md:flex-none md:flex-row md:gap-3 md:rounded-lg md:px-3 md:text-sm'
 
 function Brand({ className }: { className?: string }) {
   return (

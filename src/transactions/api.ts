@@ -86,6 +86,24 @@ export function useTransactions(month: string) {
   })
 }
 
+/** Os lançamentos com vencimento entre duas datas, inclusive, em ordem de vencimento. */
+export function useTransactionsBetween(first: string, last: string) {
+  return useQuery({
+    queryKey: useUserQueryKey('transactions', 'between', first, last),
+    queryFn: async (): Promise<Transaction[]> => {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .gte('due_date', first)
+        .lte('due_date', last)
+        .order('due_date')
+        .order('created_at')
+      if (error) throw error
+      return data
+    },
+  })
+}
+
 /** Um lançamento pelo id; `null` se não existe ou é de outro usuário. */
 export function useTransaction(id: string | undefined) {
   return useQuery({
