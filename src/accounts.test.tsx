@@ -103,6 +103,7 @@ test('editar conta abre com os valores atuais e grava as mudanças', async () =>
   ]
   const user = renderAt('/contas')
   await user.click(await screen.findByRole('link', { name: /Visa/ }))
+  await user.click(await screen.findByRole('link', { name: 'Editar' }))
 
   const name = await screen.findByLabelText('Nome')
   expect(name).toHaveValue('Visa')
@@ -119,7 +120,7 @@ test('editar conta abre com os valores atuais e grava as mudanças', async () =>
 
 test('arquivar tira a conta da lista principal, e desarquivar a traz de volta', async () => {
   db.tables.accounts = [account({ id: 'a', name: 'Poupança velha', type: 'poupanca' })]
-  const user = renderAt('/contas/a')
+  const user = renderAt('/contas/a/editar')
   await user.click(await screen.findByRole('button', { name: 'Arquivar' }))
 
   expect(await screen.findByText('Arquivadas (1)')).toBeInTheDocument()
@@ -127,6 +128,7 @@ test('arquivar tira a conta da lista principal, e desarquivar a traz de volta', 
   expect(db.tables.accounts[0]).toMatchObject({ archived: true })
 
   await user.click(screen.getByRole('link', { name: /Poupança velha/ }))
+  await user.click(await screen.findByRole('link', { name: 'Editar' }))
   await user.click(await screen.findByRole('button', { name: 'Desarquivar' }))
 
   expect(await screen.findByRole('heading', { name: 'Poupanças' })).toBeInTheDocument()
@@ -135,7 +137,7 @@ test('arquivar tira a conta da lista principal, e desarquivar a traz de volta', 
 
 test('excluir pede confirmação antes de apagar a conta', async () => {
   db.tables.accounts = [account({ id: 'a', name: 'Teste' })]
-  const user = renderAt('/contas/a')
+  const user = renderAt('/contas/a/editar')
   await user.click(await screen.findByRole('button', { name: 'Excluir' }))
   expect(db.tables.accounts).toHaveLength(1)
 
@@ -147,7 +149,7 @@ test('excluir pede confirmação antes de apagar a conta', async () => {
 test('conta em uso não é excluída: o app manda arquivar', async () => {
   db.tables.accounts = [account({ id: 'a', name: 'Em uso' })]
   db.errors['delete:accounts'] = { code: '23503' }
-  const user = renderAt('/contas/a')
+  const user = renderAt('/contas/a/editar')
   await user.click(await screen.findByRole('button', { name: 'Excluir' }))
   await user.click(screen.getByRole('button', { name: 'Sim, excluir' }))
 

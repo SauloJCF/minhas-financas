@@ -83,10 +83,56 @@ isOneToOne: false
       referencedColumns: ["id","user_id","type"]
     }
                   ]
+                },"transfers": {
+                  Row: {
+                    "amount": number,"created_at": string,"date": string,"from_account_id": string,"id": string,"notes": string | null,"to_account_id": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount": number,"created_at"?: string,"date": string,"from_account_id": string,"id"?: string,"notes"?: string | null,"to_account_id": string,"user_id"?: string
+                  }
+                  Update: {
+                    "amount"?: number,"created_at"?: string,"date"?: string,"from_account_id"?: string,"id"?: string,"notes"?: string | null,"to_account_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "transfers_from_account_fkey"
+      columns: ["from_account_id","user_id"]
+isOneToOne: false
+      referencedRelation: "accounts"
+      referencedColumns: ["id","user_id"]
+    },{
+      foreignKeyName: "transfers_from_account_fkey"
+      columns: ["from_account_id","user_id"]
+isOneToOne: false
+      referencedRelation: "accounts_with_balance"
+      referencedColumns: ["id","user_id"]
+    },{
+      foreignKeyName: "transfers_to_account_fkey"
+      columns: ["to_account_id","user_id"]
+isOneToOne: false
+      referencedRelation: "accounts"
+      referencedColumns: ["id","user_id"]
+    },{
+      foreignKeyName: "transfers_to_account_fkey"
+      columns: ["to_account_id","user_id"]
+isOneToOne: false
+      referencedRelation: "accounts_with_balance"
+      referencedColumns: ["id","user_id"]
+    }
+                  ]
                 }
           }
           Views: {
-            "accounts_with_balance": {
+            "account_statement": {
+                  Row: {
+                    "account_id": string | null,"amount": number | null,"created_at": string | null,"date": string | null,"description": string | null,"id": string | null,"kind": string | null,"other_account_id": string | null,"settled": boolean | null,"user_id": string | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    
+                  ]
+                },"accounts_with_balance": {
                   Row: {
                     "archived": boolean,"color": string,"created_at": string,"current_balance": number | null,"forecast_balance": number | null,"icon": string,"id": string,"initial_balance": number,"initial_balance_date": string,"name": string,"type": Database["public"]['Enums']["account_type"],"user_id": string
                   }

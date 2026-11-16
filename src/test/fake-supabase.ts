@@ -16,7 +16,7 @@ export const db = {
   nextId: 1,
 
   reset() {
-    db.tables = { accounts: [], categories: [], transactions: [] }
+    db.tables = { accounts: [], categories: [], transactions: [], transfers: [] }
     db.views = {
       // A mesma regra da view do banco: pagos (a partir da data do saldo inicial) no saldo
       // atual; pendentes só no previsto.
@@ -25,15 +25,64 @@ export const db = {
           const signed = (row: Row) => (row.type === 'income' ? 1 : -1) * (row.amount as number)
           const own = db.tables.transactions.filter((row) => row.account_id === account.id)
           const sum = (rows: Row[]) => rows.reduce((total, row) => total + signed(row), 0)
+          const since = account.initial_balance_date as string
+          const transfers = db.tables.transfers
+            .filter((row) => (row.date as string) >= since)
+            .reduce(
+              (total, row) =>
+                total +
+                (row.to_account_id === account.id ? (row.amount as number) : 0) -
+                (row.from_account_id === account.id ? (row.amount as number) : 0),
+              0,
+            )
           const current =
             (account.initial_balance as number) +
-            sum(own.filter((row) => row.paid_at && row.paid_at >= (account.initial_balance_date as string)))
+            sum(own.filter((row) => row.paid_at && (row.paid_at as string) >= since)) +
+            transfers
           return {
             ...account,
             current_balance: current,
             forecast_balance: current + sum(own.filter((row) => !row.paid_at)),
           }
         }),
+      // Como no banco: cada lançamento uma vez, cada transferência uma vez por conta.
+      account_statement: () => [
+        ...db.tables.transactions.map((row) => ({
+          id: row.id,
+          account_id: row.account_id,
+          kind: 'transaction',
+          date: row.paid_at ?? row.due_date,
+          description: row.description,
+          amount: (row.type === 'income' ? 1 : -1) * (row.amount as number),
+          settled: Boolean(row.paid_at),
+          other_account_id: null,
+          created_at: row.created_at,
+        })),
+        ...db.tables.transfers.flatMap((row) => [
+          {
+            id: row.id,
+            account_id: row.from_account_id,
+            kind: 'transfer',
+            date: row.date,
+            description: row.notes,
+            amount: -(row.amount as number),
+            settled: true,
+            other_account_id: row.to_account_id,
+            created_at: row.created_at,
+          },
+          {
+            id: row.id,
+            account_id: row.to_account_id,
+            kind: 'transfer',
+            date: row.date,
+            description: row.notes,
+            amount: row.amount,
+            settled: true,
+            other_account_id: row.from_account_id,
+            created_at: row.created_at,
+          },
+        ]),
+      ],
     }
     db.errors = {}
     db.session = { user: { id: 'ana', email: 'ana@example.com' } }

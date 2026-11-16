@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react'
+import { ArrowLeftRight, Plus } from 'lucide-react'
 import { Link } from 'react-router'
 import { ACCOUNT_TYPES, useAccounts, type Account } from '@/accounts/api'
 import { ErrorMessage, LoadingMessage } from '@/components/FormPage'
@@ -42,12 +42,22 @@ export function Accounts() {
     <div className="grid gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Contas</h1>
-        <Button asChild>
-          <Link to="/contas/nova">
-            <Plus aria-hidden />
-            Nova conta
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          {active.length >= 2 && (
+            <Button variant="outline" asChild>
+              <Link to="/transferencias/nova">
+                <ArrowLeftRight aria-hidden />
+                Transferir
+              </Link>
+            </Button>
+          )}
+          <Button asChild>
+            <Link to="/contas/nova">
+              <Plus aria-hidden />
+              Nova conta
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {isPending && <LoadingMessage />}
@@ -85,6 +95,12 @@ export function Accounts() {
             ))}
           </ul>
         </details>
+      )}
+
+      {accounts && accounts.length >= 2 && (
+        <Link to="/transferencias" className="px-2 text-sm text-muted-foreground underline hover:text-foreground">
+          Ver transferências entre contas
+        </Link>
       )}
     </div>
   )
