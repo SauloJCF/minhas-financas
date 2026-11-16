@@ -25,8 +25,8 @@ export function signedAmount(transaction: Pick<Transaction, 'type' | 'amount'>):
   return transaction.type === 'income' ? transaction.amount : -transaction.amount
 }
 
-// Gravar um lançamento muda também os saldos das contas.
-const INVALIDATES = ['transactions', 'accounts']
+// Gravar um lançamento muda também os saldos e o extrato das contas.
+const INVALIDATES = ['transactions', 'accounts', 'statement']
 
 /** Os lançamentos com vencimento no mês ("2026-11"), em ordem de vencimento. */
 export function useTransactions(month: string) {

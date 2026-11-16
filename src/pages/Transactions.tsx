@@ -1,12 +1,14 @@
-import { ChevronLeft, ChevronRight, Circle, CircleCheck, Plus } from 'lucide-react'
+import { Circle, CircleCheck, Plus } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router'
 import { cn } from 'cn'
 import { useAccounts } from '@/accounts/api'
 import { useCategories } from '@/categories/api'
 import { ErrorMessage, LoadingMessage } from '@/components/FormPage'
+import { MonthNav } from '@/components/MonthNav'
 import { Button } from '@/components/ui/button'
-import { addMonths, currentMonth, formatDate, formatMonth, isMonth, today } from '@/lib/dates'
+import { formatDate, today } from '@/lib/dates'
 import { formatBRL } from '@/lib/money'
+import { useMonthParam } from '@/lib/month-param'
 import { statusOf, useSetPaid, useTransactions, type Transaction } from '@/transactions/api'
 
 const STATUS_FILTERS = [
@@ -77,8 +79,7 @@ function TransactionRow({ transaction, accountName, categoryName }: RowProps) {
 /** Os lançamentos de um mês, com filtros por conta, categoria e estado. O mês e os filtros vivem na URL. */
 export function Transactions() {
   const [params, setParams] = useSearchParams()
-  const monthParam = params.get('mes')
-  const month = isMonth(monthParam) ? monthParam : currentMonth()
+  const [month] = useMonthParam()
   const accountFilter = params.get('conta') ?? ''
   const categoryFilter = params.get('categoria') ?? ''
   const statusFilter = params.get('estado') ?? ''
@@ -121,25 +122,7 @@ export function Transactions() {
         </Button>
       </div>
 
-      <div className="flex items-center justify-between">
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="Mês anterior"
-          onClick={() => setParam('mes', addMonths(month, -1))}
-        >
-          <ChevronLeft aria-hidden />
-        </Button>
-        <h2 className="font-medium first-letter:uppercase">{formatMonth(month)}</h2>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="Mês seguinte"
-          onClick={() => setParam('mes', addMonths(month, 1))}
-        >
-          <ChevronRight aria-hidden />
-        </Button>
-      </div>
+      <MonthNav month={month} onChange={(next) => setParam('mes', next)} />
 
       <div className="grid grid-cols-3 gap-2">
         <select

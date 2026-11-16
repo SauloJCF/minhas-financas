@@ -10,9 +10,9 @@ import {
 import { ArchiveDeleteActions } from '@/components/ArchiveDeleteActions'
 import { ErrorMessage, FormPage, LoadingMessage } from '@/components/FormPage'
 
-const back = { to: '/contas', label: 'Contas' }
+const list = { to: '/contas', label: 'Contas' }
 
-/** Cria uma conta (`/contas/nova`) ou edita a da URL (`/contas/:id`). */
+/** Cria uma conta (`/contas/nova`) ou edita a da URL (`/contas/:id/editar`). */
 export function AccountEdit() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -20,7 +20,9 @@ export function AccountEdit() {
   const save = useSaveAccount()
   const archive = useArchiveAccount()
   const remove = useDeleteAccount()
-  const backToList = () => void navigate(back.to)
+  const backToList = () => void navigate(list.to)
+  // Quem edita veio do extrato da conta.
+  const back = id ? { to: `/contas/${id}`, label: 'Extrato' } : list
 
   async function submit(values: AccountInput) {
     await save.mutateAsync({ id, values })
