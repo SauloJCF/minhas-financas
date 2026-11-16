@@ -30,3 +30,18 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+
+  db:
+    name: Testes de banco (pgTAP)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      # Só o Postgres local, já com as migrations aplicadas; os testes de RLS não usam o resto.
+      - run: npx supabase db start
+      - run: npm run db:test

@@ -1,10 +1,12 @@
 import { Navigate, Route, Routes } from 'react-router'
 import { RequireAuth, RequireSignedOut } from '@/auth/guards'
 import { AppLayout } from '@/components/AppLayout'
-import { Account } from '@/pages/Account'
+import { ContaEdit } from '@/pages/ContaEdit'
+import { Contas } from '@/pages/Contas'
 import { ForgotPassword } from '@/pages/ForgotPassword'
 import { Home } from '@/pages/Home'
 import { Login } from '@/pages/Login'
+import { Profile } from '@/pages/Profile'
 import { SetPassword } from '@/pages/SetPassword'
 
 export function AppRoutes() {
@@ -21,7 +23,10 @@ export function AppRoutes() {
       <Route element={<RequireAuth />}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Home />} />
-          <Route path="/conta" element={<Account />} />
+          <Route path="/contas" element={<Contas />} />
+          <Route path="/contas/nova" element={<ContaEdit />} />
+          <Route path="/contas/:id" element={<ContaEdit />} />
+          <Route path="/perfil" element={<Profile />} />
         </Route>
       </Route>
 

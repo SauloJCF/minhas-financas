@@ -5,7 +5,7 @@ const MESSAGES: Record<string, string> = {
   otp_expired: 'Este link expirou ou já foi usado. Peça um novo.',
   over_email_send_rate_limit: 'Muitos e-mails enviados. Tente de novo em alguns minutos.',
   over_request_rate_limit: 'Muitas tentativas. Tente de novo em alguns minutos.',
-  user_banned: 'Esta conta está bloqueada.',
+  user_banned: 'Este usuário está bloqueado.',
 }
 
 /** Traduz um erro do Supabase Auth para uma mensagem que o usuário entende. */

@@ -17,8 +17,14 @@ npm run dev
 
 `npm run dev` lê `.env.development.local` e fala com o Supabase **local**. Os e-mails de
 convite e de recuperação enviados em desenvolvimento não saem da máquina: aparecem na caixa
-de entrada falsa em <http://127.0.0.1:54324>. Para convidar um usuário local, use
+de entrada falsa em <http://127.0.0.1:54324>.
+
+O banco local já nasce com um usuário de desenvolvimento, criado por `supabase/seed.sql`
+(o e-mail e a senha estão lá) e recriado a cada `npm run db:reset`. Para convidar outro, use
 **Authentication > Users > Invite user** no Studio local (<http://127.0.0.1:54323>).
+
+Mudou o schema? Crie a migration em `supabase/migrations/`, rode `npm run db:reset`,
+`npm run db:test` e `npm run db:types`, e inclua `src/lib/database.types.ts` no commit.
 
 | Comando | O que faz |
 | --- | --- |
@@ -34,7 +40,8 @@ de entrada falsa em <http://127.0.0.1:54324>. Para convidar um usuário local, u
 
 ## CI/CD
 
-- **Pull request**: `.github/workflows/ci.yml` roda lint, tipos, testes e build.
+- **Pull request**: `.github/workflows/ci.yml` roda lint, tipos, testes e build, e os testes
+  de banco/RLS (pgTAP) em um Postgres local do próprio CI.
 - **Push na `main`**: `.github/workflows/deploy.yml` roda o CI, aplica as migrations
   no Supabase e só então publica o front na Cloudflare.
 

@@ -84,12 +84,12 @@ test('login valida o e-mail antes de chamar o servidor', async () => {
   expect(fake.auth.signInWithPassword).not.toHaveBeenCalled()
 })
 
-test('esqueci minha senha confirma o envio sem revelar se a conta existe', async () => {
+test('esqueci minha senha confirma o envio sem revelar se o usuário existe', async () => {
   const user = renderAt('/esqueci-senha')
   await user.type(await screen.findByLabelText('E-mail'), 'ana@example.com')
   await user.click(screen.getByRole('button', { name: 'Enviar link' }))
 
-  expect(await screen.findByRole('status')).toHaveTextContent('Se houver uma conta')
+  expect(await screen.findByRole('status')).toHaveTextContent('Se houver um usuário')
   expect(fake.auth.resetPasswordForEmail).toHaveBeenCalledWith('ana@example.com')
 })
 
@@ -159,9 +159,9 @@ test('definir senha sem token mostra link inválido', async () => {
   expect(await screen.findByRole('heading', { name: 'Link inválido' })).toBeInTheDocument()
 })
 
-test('conta: mostra o e-mail, troca a senha e sai', async () => {
+test('perfil: mostra o e-mail, troca a senha e sai', async () => {
   fake.state.currentSession = { user: { email: 'ana@example.com' } }
-  const user = renderAt('/conta')
+  const user = renderAt('/perfil')
   expect(await screen.findByText('ana@example.com')).toBeInTheDocument()
 
   await user.type(screen.getByLabelText('Nova senha'), 'senha-nova-123')

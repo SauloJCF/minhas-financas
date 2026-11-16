@@ -34,9 +34,9 @@ export function ForgotPassword() {
   if (sent) {
     return (
       <AuthLayout title="Confira seu e-mail">
-        {/* Mesma resposta exista a conta ou não, para não revelar quem é usuário. */}
+        {/* Mesma resposta exista o usuário ou não, para não revelar quem é usuário. */}
         <p role="status" className="text-sm">
-          Se houver uma conta com esse e-mail, enviamos um link para redefinir a senha.
+          Se houver um usuário com esse e-mail, enviamos um link para redefinir a senha.
         </p>
         {backToLogin}
       </AuthLayout>
