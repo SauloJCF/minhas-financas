@@ -37,6 +37,32 @@ Mudou o schema? Crie a migration em `supabase/migrations/`, rode `npm run db:res
 | `npm run db:reset` | Recria o banco local aplicando as migrations |
 | `npm run db:test` | Testes de banco/RLS (pgTAP) |
 | `npm run db:types` | Gera os tipos TypeScript a partir do schema local |
+| `npm run mcp` | Servidor MCP local (ver abaixo) |
+
+### Servidor MCP local
+
+`mcp/server.ts` é um servidor [MCP](https://modelcontextprotocol.io) que deixa um cliente
+como o Claude Code consultar e criar lançamentos no Supabase **local**. Ele entra como o
+usuário de desenvolvimento, pela chave `anon`, então o RLS vale como no front; e recusa
+iniciar se a URL do Supabase não for da própria máquina (ADR 0009).
+
+| Ferramenta | O que faz |
+| --- | --- |
+| `list_accounts` | Contas não arquivadas, com saldo atual e previsto |
+| `list_categories` | Categorias não arquivadas |
+| `list_transactions` | Lançamentos de um período, com filtros |
+| `month_summary` | Receitas, despesas e resultado de um mês, e despesas por categoria |
+| `create_transaction` | Cria um lançamento |
+
+- **Claude Code**: o `.mcp.json` da raiz já registra o servidor. Ao abrir o projeto, aprove o
+  servidor `minhas-financas`; com o Supabase local no ar, as ferramentas aparecem em `/mcp`.
+- **À mão**: `npm run mcp` inicia o servidor, que fica esperando um cliente em stdin/stdout.
+  Para chamar as ferramentas por uma interface, use o MCP Inspector:
+  `npx @modelcontextprotocol/inspector -- node --env-file-if-exists=.env.development.local mcp/server.ts`.
+- **Outro usuário**: defina `MCP_USER_EMAIL` e `MCP_USER_PASSWORD` em `.env.development.local`.
+
+O servidor roda direto pelo Node, sem build. A lógica que não depende do banco fica em
+`mcp/tools.ts` e é testada por `npm test`.
 
 ## CI/CD
 
