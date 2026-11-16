@@ -224,6 +224,33 @@ const functions: Record<string, (args: Record<string, unknown>) => unknown> = {
     }
     return seriesId
   },
+  create_installments(args) {
+    const start = args.p_due_date as string
+    const count = args.p_count as number
+    const total = args.p_amount as number
+    const base = Math.floor(total / count)
+    const seriesId = insertRow('transaction_series', {
+      kind: 'installment',
+      frequency: 'monthly',
+      start_date: start,
+      installment_count: count,
+    })
+    for (let n = 1; n <= count; n++) {
+      insertRow('transactions', {
+        type: args.p_type,
+        description: args.p_description,
+        amount: n === 1 ? total - base * (count - 1) : base,
+        account_id: args.p_account_id,
+        category_id: args.p_category_id,
+        due_date: seriesDueDate(start, 'monthly', n),
+        paid_at: n === 1 ? args.p_paid_at : null,
+        notes: args.p_notes,
+        group_id: seriesId,
+        installment_number: n,
+      })
+    }
+    return seriesId
+  },
   extend_recurrence(args) {
     const series = db.tables.transaction_series.find((row) => row.id === args.p_series_id)!
     const occurrences = db.tables.transactions.filter((row) => row.group_id === series.id)

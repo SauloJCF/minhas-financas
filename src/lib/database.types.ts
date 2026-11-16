@@ -166,6 +166,9 @@ isOneToOne: false
             "create_default_categories":
 { Args: { "target_user_id": string }; Returns: undefined
                            },
+"create_installments":
+{ Args: { "p_account_id": string,"p_amount": number,"p_category_id": string,"p_count": number,"p_description": string,"p_due_date": string,"p_notes": string,"p_paid_at": string,"p_type": Database["public"]['Enums']["transaction_type"] }; Returns: string
+                           },
 "create_recurrence":
 { Args: { "p_account_id": string,"p_amount": number,"p_category_id": string,"p_description": string,"p_due_date": string,"p_frequency": Database["public"]['Enums']["series_frequency"],"p_notes": string,"p_paid_at": string,"p_type": Database["public"]['Enums']["transaction_type"] }; Returns: string
                            },

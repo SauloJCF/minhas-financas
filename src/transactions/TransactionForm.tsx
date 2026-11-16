@@ -12,10 +12,17 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { today } from '@/lib/dates'
 import { dbErrorMessage } from '@/lib/db'
-import { centavosToInput, parseBRL } from '@/lib/money'
-import type { Frequency, SeriesScope, Transaction, TransactionInput } from './api'
+import { centavosToInput, formatBRL, parseBRL } from '@/lib/money'
+import { splitInstallments, type Frequency, type SeriesScope, type Transaction, type TransactionInput } from './api'
 
 const isDate = (text: string) => z.iso.date().safeParse(text).success
+
+/** O número de parcelas digitado, se for um inteiro de 2 a 48. */
+function parseInstallments(text: string): number | null {
+  if (!/^\d{1,2}$/.test(text.trim())) return null
+  const count = Number(text)
+  return count >= 2 && count <= 48 ? count : null
+}
 
 /** O que o formulário guarda: tudo como foi digitado. */
 const transactionSchema = z
@@ -29,7 +36,8 @@ const transactionSchema = z
     paid: z.boolean(),
     paidAt: z.string(),
     notes: z.string().trim().max(500, 'Use até 500 caracteres.'),
-    repeat: z.enum(['none', 'recurrence']),
+    repeat: z.enum(['none', 'installment', 'recurrence']),
+    installments: z.string(),
     frequency: z.enum(['weekly', 'monthly', 'yearly']),
     scope: z.enum(['one', 'following']),
   })
@@ -37,6 +45,16 @@ const transactionSchema = z
     path: ['paidAt'],
     message: 'Informe a data do pagamento.',
   })
+  .refine((values) => values.repeat !== 'installment' || parseInstallments(values.installments) !== null, {
+    path: ['installments'],
+    message: 'Informe de 2 a 48 parcelas.',
+  })
+  .refine(
+    (values) =>
+      values.repeat !== 'installment' ||
+      (parseBRL(values.amount) ?? 0) >= (parseInstallments(values.installments) ?? 0),
+    { path: ['amount'], message: 'O total precisa dar pelo menos um centavo por parcela.' },
+  )
 type TransactionFormValues = z.infer<typeof transactionSchema>
 
 type Props = {
@@ -52,6 +70,8 @@ type Props = {
 export type SubmitOptions = {
   /** Ao criar: a frequência da recorrência, ou `null` se o lançamento não se repete. */
   frequency: Frequency | null
+  /** Ao criar: o número de parcelas, ou `null` se o lançamento não é parcelado. O valor é o total. */
+  installments: number | null
   /** Ao editar um lançamento de série: até onde a alteração vai. */
   scope: SeriesScope
 }
@@ -92,6 +112,7 @@ export function TransactionForm({ transaction, accounts, categories, onSubmit }:
           paidAt: transaction.paid_at ?? today(),
           notes: transaction.notes ?? '',
           repeat: 'none',
+          installments: '2',
           frequency: 'monthly',
           scope: 'one',
         }
@@ -107,6 +128,7 @@ export function TransactionForm({ transaction, accounts, categories, onSubmit }:
           paidAt: today(),
           notes: '',
           repeat: 'none',
+          installments: '2',
           frequency: 'monthly',
           scope: 'one',
         },
@@ -115,6 +137,11 @@ export function TransactionForm({ transaction, accounts, categories, onSubmit }:
   const type = useWatch({ control, name: 'type' })
   const paid = useWatch({ control, name: 'paid' })
   const repeat = useWatch({ control, name: 'repeat' })
+  const amountText = useWatch({ control, name: 'amount' })
+  const installmentsText = useWatch({ control, name: 'installments' })
+  const installments = repeat === 'installment' && !transaction ? parseInstallments(installmentsText) : null
+  const total = parseBRL(amountText) ?? 0
+  const split = installments && total >= installments ? splitInstallments(total, installments) : null
   const inSeries = Boolean(transaction?.group_id)
 
   const submit = handleSubmit(async (values) => {
@@ -122,6 +149,7 @@ export function TransactionForm({ transaction, accounts, categories, onSubmit }:
     try {
       const options: SubmitOptions = {
         frequency: !transaction && values.repeat === 'recurrence' ? values.frequency : null,
+        installments: !transaction && values.repeat === 'installment' ? parseInstallments(values.installments) : null,
         scope: inSeries ? values.scope : 'one',
       }
       const input: TransactionInput = {
@@ -160,7 +188,7 @@ export function TransactionForm({ transaction, accounts, categories, onSubmit }:
 
       <div className="grid grid-cols-2 gap-4">
         <FormField
-          label="Valor (R$)"
+          label={repeat === 'installment' && !transaction ? 'Valor total (R$)' : 'Valor (R$)'}
           inputMode="decimal"
           autoComplete="off"
           placeholder="0,00"
@@ -208,8 +236,26 @@ export function TransactionForm({ transaction, accounts, categories, onSubmit }:
         <div className="grid grid-cols-2 gap-4">
           <SelectField label="Repetir" {...register('repeat')}>
             <option value="none">Não repete</option>
+            <option value="installment">Parcelado</option>
             <option value="recurrence">Recorrente</option>
           </SelectField>
+          {repeat === 'installment' && (
+            <FormField
+              label="Parcelas"
+              inputMode="numeric"
+              autoComplete="off"
+              error={errors.installments?.message}
+              {...register('installments')}
+            />
+          )}
+          {repeat === 'installment' && split && (
+            <p className="col-span-2 text-xs text-muted-foreground">
+              {split.first === split.others
+                ? `${installments} parcelas mensais de ${formatBRL(split.others)}.`
+                : `${installments} parcelas mensais: a primeira de ${formatBRL(split.first)} e as demais de ${formatBRL(split.others)}.`}{' '}
+              {paid ? 'Só a primeira nasce paga.' : ''}
+            </p>
+          )}
           {repeat === 'recurrence' && (
             <SelectField label="Frequência" {...register('frequency')}>
               {FREQUENCIES.map((frequency) => (

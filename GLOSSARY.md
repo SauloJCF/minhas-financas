@@ -94,6 +94,14 @@ _Avoid_: Grupo, lote, repetição
 Série de lançamentos iguais que se repetem sem data para acabar, como aluguel ou salário. Nasce com 12 ocorrências e pode ser estendida.
 _Avoid_: Lançamento fixo, despesa fixa, assinatura
 
+**Parcelamento**:
+Série que divide um valor total em parcelas mensais, com um número fixo de parcelas.
+_Avoid_: Compra parcelada, financiamento, crediário
+
+**Parcela**:
+Cada lançamento de um parcelamento, identificado pela posição e pelo total, como "3/10".
+_Avoid_: Prestação, mensalidade
+
 **Ocorrência**:
 Cada lançamento de uma recorrência.
 _Avoid_: Repetição, instância

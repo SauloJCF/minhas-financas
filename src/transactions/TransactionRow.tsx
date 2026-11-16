@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 import { cn } from 'cn'
 import { formatDate, today } from '@/lib/dates'
 import { formatBRL } from '@/lib/money'
-import { statusOf, useSetPaid, type Transaction } from './api'
+import { installmentLabel, statusOf, useSeriesMap, useSetPaid, type Transaction } from './api'
 
 type RowProps = {
   transaction: Transaction
@@ -13,6 +13,8 @@ type RowProps = {
 
 export function TransactionRow({ transaction, accountName, categoryName }: RowProps) {
   const setPaid = useSetPaid()
+  const series = useSeriesMap().data?.get(transaction.group_id ?? '')
+  const installment = installmentLabel(transaction, series)
   const status = statusOf(transaction, today())
   const paid = status === 'paid'
   const income = transaction.type === 'income'
@@ -40,8 +42,11 @@ export function TransactionRow({ transaction, accountName, categoryName }: RowPr
       >
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-1.5 font-medium">
-            <span className="truncate">{transaction.description}</span>
-            {transaction.group_id && (
+            <span className="truncate">
+              {transaction.description}
+              {installment && ` ${installment}`}
+            </span>
+            {series?.kind === 'recurrence' && (
               <Repeat role="img" aria-label="Recorrente" className="size-3.5 shrink-0 text-muted-foreground" />
             )}
           </span>

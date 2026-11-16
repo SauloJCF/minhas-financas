@@ -49,6 +49,7 @@ export function TransactionEdit() {
       id,
       values,
       frequency: options.frequency,
+      installments: options.installments,
       following: options.scope === 'following' ? (transaction.data ?? undefined) : undefined,
     })
     void navigate(backTo(values.due_date))
@@ -133,6 +134,14 @@ export function TransactionEdit() {
             {extend.isPending ? 'Estendendo…' : 'Estender por mais 12'}
           </Button>
           {extendError && <ErrorMessage>{extendError}</ErrorMessage>}
+        </section>
+      )}
+      {series.data?.kind === 'installment' && (
+        <section className="grid gap-2 border-t pt-6">
+          <h2 className="font-medium">Parcelamento</h2>
+          <p className="text-sm text-muted-foreground">
+            Esta é a parcela {transaction.data?.installment_number} de {series.data.installment_count}.
+          </p>
         </section>
       )}
       {transaction.data && (
