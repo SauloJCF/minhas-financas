@@ -21,10 +21,11 @@ function account(overrides: Record<string, unknown>) {
 
 beforeEach(() => db.reset())
 
-test('a navegação leva a contas, categorias e perfil, e guarda o lugar das próximas telas', async () => {
+test('a navegação leva a lançamentos, contas, categorias e perfil', async () => {
   const user = renderAt('/')
   const nav = await screen.findByRole('navigation', { name: 'Principal' })
-  expect(within(nav).getByText('Lançamentos')).toHaveAttribute('aria-disabled', 'true')
+    await user.click(within(nav).getByRole('link', { name: 'Lançamentos' }))
+  expect(await screen.findByRole('heading', { name: 'Lançamentos' })).toBeInTheDocument()
 
   await user.click(within(nav).getByRole('link', { name: 'Contas' }))
   expect(await screen.findByRole('heading', { name: 'Contas' })).toBeInTheDocument()

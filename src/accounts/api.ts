@@ -6,7 +6,12 @@ import { supabase } from '@/lib/supabase'
 export type AccountType = Database['public']['Enums']['account_type']
 
 /** Uma conta com os saldos, que são calculados pela view e nunca armazenados. */
-export type Account = Tables<'accounts_with_balance'>
+export type Account = Omit<Tables<'accounts_with_balance'>, 'current_balance' | 'forecast_balance'> & {
+  /** Saldo inicial mais os lançamentos pagos. */
+  current_balance: number
+  /** Saldo atual mais os lançamentos pendentes. */
+  forecast_balance: number
+}
 
 export type AccountInput = Pick<
   TablesInsert<'accounts'>,
@@ -29,7 +34,8 @@ export function useAccounts() {
     queryFn: async (): Promise<Account[]> => {
       const { data, error } = await supabase.from('accounts_with_balance').select('*').order('name')
       if (error) throw error
-      return data
+      // Os tipos gerados dão colunas calculadas como anuláveis; a view nunca devolve nulo nelas.
+      return data as Account[]
     },
   })
 }

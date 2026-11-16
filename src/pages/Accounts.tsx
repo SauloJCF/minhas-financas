@@ -5,6 +5,7 @@ import { ErrorMessage, LoadingMessage } from '@/components/FormPage'
 import { ListRow } from '@/components/ListRow'
 import { Money } from '@/components/Money'
 import { Button } from '@/components/ui/button'
+import { formatBRL } from '@/lib/money'
 
 function AccountRow({ account }: { account: Account }) {
   return (
@@ -15,7 +16,14 @@ function AccountRow({ account }: { account: Account }) {
       name={account.name}
       dimmed={account.archived}
     >
-      <Money centavos={account.current_balance} />
+      <span className="text-right">
+        <Money centavos={account.current_balance} className="block" />
+        {account.forecast_balance !== account.current_balance && (
+          <span className="block text-xs text-muted-foreground">
+            previsto {formatBRL(account.forecast_balance)}
+          </span>
+        )}
+      </span>
     </ListRow>
   )
 }
