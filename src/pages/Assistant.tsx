@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { formatDate } from '@/lib/dates'
 import { formatBRL } from '@/lib/money'
+import { useOnline } from '@/lib/offline'
 
 const back = { to: '/lancamentos', label: 'Lançamentos' }
 
@@ -158,8 +159,17 @@ export function Assistant() {
   const settings = useAssistantSettings()
   const accounts = useAccounts()
   const categories = useCategories()
+  const online = useOnline()
   const title = 'Assistente'
 
+  // O assistente conversa com o OpenRouter e grava no banco: sem rede, não há o que fazer.
+  if (!online) {
+    return (
+      <FormPage title={title} back={back}>
+        <p className="text-muted-foreground">O assistente precisa de conexão.</p>
+      </FormPage>
+    )
+  }
   if (settings.isPending || accounts.isPending || categories.isPending) {
     return (
       <FormPage title={title} back={back}>

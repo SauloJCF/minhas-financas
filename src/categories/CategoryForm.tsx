@@ -11,6 +11,7 @@ import { COLORS } from '@/lib/colors'
 import { dbErrorMessage } from '@/lib/db'
 import { CATEGORY_ICONS } from '@/lib/icons'
 import { centavosToInput, parseBRL } from '@/lib/money'
+import { useOnline } from '@/lib/offline'
 import { type Category, type CategoryInput } from './api'
 
 const categorySchema = z.object({
@@ -34,6 +35,7 @@ type Props = {
 
 export function CategoryForm({ category, onSubmit }: Props) {
   const [formError, setFormError] = useState<string | null>(null)
+  const online = useOnline()
   const {
     register,
     handleSubmit,
@@ -97,7 +99,7 @@ export function CategoryForm({ category, onSubmit }: Props) {
       <IconField icons={CATEGORY_ICONS} registration={register('icon')} />
 
       {formError && <ErrorMessage>{formError}</ErrorMessage>}
-      <Button type="submit" size="lg" disabled={isSubmitting}>
+      <Button type="submit" size="lg" disabled={isSubmitting || !online}>
         {isSubmitting ? 'Salvando…' : category ? 'Salvar' : 'Criar categoria'}
       </Button>
     </form>

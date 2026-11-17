@@ -39,6 +39,13 @@ Mudou o schema? Crie a migration em `supabase/migrations/`, rode `npm run db:res
 | `npm run db:types` | Gera os tipos TypeScript a partir do schema local |
 | `npm run mcp` | Servidor MCP local (ver abaixo) |
 
+### Offline
+
+O app instalado abre sem rede e mostra os dados que já tinha carregado, guardados no
+IndexedDB por até 7 dias. Uma faixa avisa de quando são os dados. Salvar, pagar e excluir
+precisam de conexão (ADR 0010). Para testar, rode `npm run build && npm run preview`, abra o
+app, navegue pelas telas e marque "Offline" na aba Network do DevTools.
+
 ### Servidor MCP local
 
 `mcp/server.ts` é um servidor [MCP](https://modelcontextprotocol.io) que deixa um cliente

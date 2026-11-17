@@ -18,6 +18,7 @@ import {
   type TransactionInput,
 } from '@/transactions/api'
 import { TransactionForm, type SubmitOptions } from '@/transactions/TransactionForm'
+import { useOnline } from '@/lib/offline'
 
 const FREQUENCY_LABELS: Record<Frequency, string> = {
   weekly: 'semanal',
@@ -36,6 +37,7 @@ export function TransactionEdit() {
   const remove = useDeleteTransaction()
   const series = useSeries(transaction.data?.group_id)
   const extend = useExtendRecurrence()
+  const online = useOnline()
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [extendError, setExtendError] = useState<string | null>(null)
 
@@ -130,7 +132,7 @@ export function TransactionEdit() {
             Este é o lançamento {transaction.data?.installment_number} de {series.data.lastNumber}. O último vence em{' '}
             {formatDate(series.data.lastDueDate)}.
           </p>
-          <Button variant="outline" disabled={extend.isPending} onClick={() => void extendRecurrence(series.data!.id)}>
+          <Button variant="outline" disabled={extend.isPending || !online} onClick={() => void extendRecurrence(series.data!.id)}>
             {extend.isPending ? 'Estendendo…' : 'Estender por mais 12'}
           </Button>
           {extendError && <ErrorMessage>{extendError}</ErrorMessage>}
