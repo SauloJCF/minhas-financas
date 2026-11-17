@@ -5,6 +5,7 @@ import { authErrorMessage } from '@/auth/errors'
 import { newPasswordSchema, type NewPasswordValues } from '@/auth/schemas'
 import { FormField } from '@/components/FormField'
 import { Button } from '@/components/ui/button'
+import { useOnline } from '@/lib/offline'
 
 type Props = {
   submitLabel: string
@@ -15,6 +16,7 @@ type Props = {
 /** Senha + confirmação, usado ao aceitar convite, redefinir e trocar a senha. */
 export function NewPasswordForm({ submitLabel, onSubmit }: Props) {
   const [formError, setFormError] = useState<string | null>(null)
+  const online = useOnline()
   const {
     register,
     handleSubmit,
@@ -53,7 +55,7 @@ export function NewPasswordForm({ submitLabel, onSubmit }: Props) {
           {formError}
         </p>
       )}
-      <Button type="submit" disabled={isSubmitting}>
+      <Button type="submit" disabled={isSubmitting || !online}>
         {isSubmitting ? 'Salvando…' : submitLabel}
       </Button>
     </form>

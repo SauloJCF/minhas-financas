@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label'
 import { today } from '@/lib/dates'
 import { dbErrorMessage } from '@/lib/db'
 import { centavosToInput, formatBRL, parseBRL } from '@/lib/money'
+import { useOnline } from '@/lib/offline'
 import { splitInstallments, type Frequency, type SeriesScope, type Transaction, type TransactionInput } from './api'
 
 const isDate = (text: string) => z.iso.date().safeParse(text).success
@@ -94,6 +95,7 @@ export function TransactionForm({ transaction, accounts, categories, onSubmit }:
     (category) => !category.archived || category.id === transaction?.category_id,
   )
 
+  const online = useOnline()
   const {
     register,
     handleSubmit,
@@ -335,7 +337,7 @@ export function TransactionForm({ transaction, accounts, categories, onSubmit }:
       )}
 
       {formError && <ErrorMessage>{formError}</ErrorMessage>}
-      <Button type="submit" size="lg" disabled={isSubmitting}>
+      <Button type="submit" size="lg" disabled={isSubmitting || !online}>
         {isSubmitting ? 'Salvando…' : transaction ? 'Salvar' : 'Criar lançamento'}
       </Button>
     </form>

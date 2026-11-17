@@ -7,6 +7,7 @@ import { ErrorMessage, LoadingMessage } from '@/components/FormPage'
 import { SelectField } from '@/components/SelectField'
 import { Button } from '@/components/ui/button'
 import { dbErrorMessage } from '@/lib/db'
+import { useOnline } from '@/lib/offline'
 import { modelLabel, useModels, type Model } from './openrouter'
 import { useAssistantSettings, useSaveAssistantSettings, type AssistantSettings } from './settings'
 
@@ -28,6 +29,7 @@ function SettingsForm({ settings, models }: FormProps) {
   const save = useSaveAssistantSettings()
   const [formError, setFormError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
+  const online = useOnline()
   const {
     register,
     handleSubmit,
@@ -113,14 +115,14 @@ function SettingsForm({ settings, models }: FormProps) {
 
       {formError && <ErrorMessage>{formError}</ErrorMessage>}
       <div className="flex gap-2">
-        <Button type="submit" className="flex-1" disabled={isSubmitting}>
+        <Button type="submit" className="flex-1" disabled={isSubmitting || !online}>
           {isSubmitting ? 'Salvando…' : 'Salvar'}
         </Button>
         {settings?.openrouter_key && hasKey && (
           <Button
             type="button"
             variant="outline"
-            disabled={isSubmitting}
+            disabled={isSubmitting || !online}
             onClick={() => {
               setValue('key', '')
               void submit()
@@ -143,6 +145,7 @@ function SettingsForm({ settings, models }: FormProps) {
 export function AssistantSettingsSection() {
   const settings = useAssistantSettings()
   const models = useModels()
+  const online = useOnline()
 
   return (
     <section className="grid gap-4">
@@ -153,7 +156,10 @@ export function AssistantSettingsSection() {
           escrever e os nomes das suas contas e categorias são enviados ao OpenRouter e ao provedor do modelo.
         </p>
       </div>
-      {settings.isPending || models.isPending ? (
+      {/* As configurações não ficam guardadas no aparelho (têm a chave), então offline não há o que mostrar. */}
+      {!online && settings.isPending ? (
+        <p className="text-sm text-muted-foreground">As configurações do assistente precisam de conexão.</p>
+      ) : settings.isPending || models.isPending ? (
         <LoadingMessage />
       ) : settings.isError ? (
         <ErrorMessage>Não foi possível carregar as configurações. Verifique sua conexão e tente de novo.</ErrorMessage>
