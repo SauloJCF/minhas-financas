@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import { cn } from 'cn'
 import { useCardAccountIds } from '@/accounts/api'
 import { formatDate, today } from '@/lib/dates'
+import { useOnline } from '@/lib/offline'
 import { installmentLabel, statusOf, useSeriesMap, useSetPaid, type Transaction } from './api'
 import { useFormatBRL, useValuesHidden } from '@/lib/hidden-values'
 
@@ -16,6 +17,7 @@ export function TransactionRow({ transaction, accountName, categoryName }: RowPr
   const formatBRL = useFormatBRL()
   const hidden = useValuesHidden()
   const setPaid = useSetPaid()
+  const online = useOnline()
   const series = useSeriesMap().data?.get(transaction.group_id ?? '')
   const installment = installmentLabel(transaction, series)
   const inCard = useCardAccountIds().has(transaction.account_id)
@@ -30,7 +32,7 @@ export function TransactionRow({ transaction, accountName, categoryName }: RowPr
         type="button"
         aria-label={paid ? `Desfazer pagamento de ${transaction.description}` : `Marcar ${transaction.description} como pago`}
         aria-pressed={paid}
-        disabled={setPaid.isPending}
+        disabled={setPaid.isPending || !online}
         onClick={() => setPaid.mutate({ id: transaction.id, paidAt: paid ? null : today() })}
         className={cn(
           'flex size-10 shrink-0 items-center justify-center rounded-full outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50',

@@ -1,13 +1,24 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { AssistantSettingsSection } from '@/assistant/AssistantSettingsForm'
 import { useAuth } from '@/auth/auth-context'
 import { NewPasswordForm } from '@/components/NewPasswordForm'
 import { Button } from '@/components/ui/button'
+import { clearUserCache } from '@/lib/offline'
 import { supabase } from '@/lib/supabase'
 
 export function Profile() {
   const { session } = useAuth()
   const [saved, setSaved] = useState(false)
+  const queryClient = useQueryClient()
+
+  async function signOut() {
+    // Sem rede, o Supabase não consegue encerrar a sessão no servidor; ela sai pelo menos do aparelho.
+    const { error } = await supabase.auth.signOut()
+    if (error) await supabase.auth.signOut({ scope: 'local' })
+    // Os dados de um usuário não ficam no aparelho depois que ele sai.
+    await clearUserCache(queryClient)
+  }
 
   async function changePassword(password: string) {
     setSaved(false)
@@ -35,7 +46,7 @@ export function Profile() {
 
       <AssistantSettingsSection />
 
-      <Button variant="outline" onClick={() => void supabase.auth.signOut()}>
+      <Button variant="outline" onClick={() => void signOut()}>
         Sair
       </Button>
 

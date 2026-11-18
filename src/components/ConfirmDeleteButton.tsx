@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { useOnline } from '@/lib/offline'
 
 type Props = {
   /** O nome do que será excluído, mostrado na pergunta. */
@@ -15,10 +16,11 @@ type Props = {
 /** Botão "Excluir" que só age depois de uma confirmação na própria tela. */
 export function ConfirmDeleteButton({ name, label = 'Excluir', question, disabled, onConfirm }: Props) {
   const [confirming, setConfirming] = useState(false)
+  const online = useOnline()
 
   if (!confirming) {
     return (
-      <Button variant="destructive" disabled={disabled} onClick={() => setConfirming(true)}>
+      <Button variant="destructive" disabled={disabled || !online} onClick={() => setConfirming(true)}>
         {label}
       </Button>
     )
@@ -30,7 +32,7 @@ export function ConfirmDeleteButton({ name, label = 'Excluir', question, disable
         <Button variant="outline" disabled={disabled} onClick={() => setConfirming(false)}>
           Cancelar
         </Button>
-        <Button variant="destructive" disabled={disabled} onClick={onConfirm}>
+        <Button variant="destructive" disabled={disabled || !online} onClick={onConfirm}>
           Sim, excluir
         </Button>
       </div>

@@ -19,7 +19,7 @@ const fake = vi.hoisted(() => {
     resetPasswordForEmail: vi.fn(),
     verifyOtp: vi.fn(),
     updateUser: vi.fn(),
-    signOut: vi.fn(),
+    signOut: vi.fn(async () => ({ error: null })),
   }
   return { state, auth }
 })

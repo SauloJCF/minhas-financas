@@ -3,6 +3,7 @@ import { ConfirmDeleteButton } from '@/components/ConfirmDeleteButton'
 import { ErrorMessage } from '@/components/FormPage'
 import { Button } from '@/components/ui/button'
 import { dbErrorMessage } from '@/lib/db'
+import { useOnline } from '@/lib/offline'
 
 type Props = {
   name: string
@@ -21,6 +22,7 @@ type Props = {
 export function ArchiveDeleteActions(props: Props) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const online = useOnline()
 
   async function run(action: () => Promise<void>) {
     setError(null)
@@ -37,7 +39,7 @@ export function ArchiveDeleteActions(props: Props) {
   return (
     <section className="grid gap-3 border-t pt-6">
       <p className="text-sm text-muted-foreground">{props.archiveHint}</p>
-      <Button variant="outline" disabled={busy} onClick={() => void run(() => props.onArchive(!props.archived))}>
+      <Button variant="outline" disabled={busy || !online} onClick={() => void run(() => props.onArchive(!props.archived))}>
         {props.archived ? 'Desarquivar' : 'Arquivar'}
       </Button>
       <ConfirmDeleteButton name={props.name} disabled={busy} onConfirm={() => void run(props.onDelete)} />

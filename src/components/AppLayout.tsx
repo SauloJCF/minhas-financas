@@ -2,6 +2,7 @@ import { ChartColumn, House, Receipt, Tags, User, Wallet, type LucideIcon } from
 import { Link, NavLink, Outlet } from 'react-router'
 import { cn } from 'cn'
 import { HideValuesButton } from '@/components/HideValuesButton'
+import { OfflineBanner } from '@/components/OfflineBanner'
 
 type NavItem = {
   label: string
@@ -84,10 +85,13 @@ export function AppLayout() {
         )}
       </nav>
 
-      {/* pb-20: no celular, o fim do conteúdo não fica atrás da navegação fixa. */}
-      <main className="mx-auto w-full max-w-3xl flex-1 p-4 pb-20 md:p-8">
-        <Outlet />
-      </main>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <OfflineBanner />
+        {/* pb-20: no celular, o fim do conteúdo não fica atrás da navegação fixa. */}
+        <main className="mx-auto w-full max-w-3xl flex-1 p-4 pb-20 md:p-8">
+          <Outlet />
+        </main>
+      </div>
     </div>
   )
 }

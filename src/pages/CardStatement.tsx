@@ -20,6 +20,7 @@ import { dbErrorMessage } from '@/lib/db'
 import { formatBRL } from '@/lib/money'
 import { installmentLabel, useSeriesMap, type Transaction } from '@/transactions/api'
 import { useFormatBRL, useValuesHidden } from '@/lib/hidden-values'
+import { useOnline } from '@/lib/offline'
 
 const shortDate = (date: string) => formatDate(date).slice(0, 5)
 
@@ -68,6 +69,7 @@ type PayProps = {
 function PayStatement({ account, sources, period, total }: PayProps) {
   const navigate = useNavigate()
   const pay = usePayCardStatement()
+  const online = useOnline()
   const sourceId = useId()
   const dateId = useId()
   const [fromAccountId, setFromAccountId] = useState(sources.length === 1 ? sources[0].id : '')
@@ -131,7 +133,7 @@ function PayStatement({ account, sources, period, total }: PayProps) {
         Transfere {formatBRL(total)} para o cartão e marca como pagos os lançamentos pendentes desta fatura.
       </p>
       {error && <ErrorMessage>{error}</ErrorMessage>}
-      <Button type="submit" disabled={pay.isPending}>
+      <Button type="submit" disabled={pay.isPending || !online}>
         {pay.isPending ? 'Pagando…' : `Pagar ${formatBRL(total)}`}
       </Button>
     </form>

@@ -12,6 +12,7 @@ import { today } from '@/lib/dates'
 import { dbErrorMessage } from '@/lib/db'
 import { ACCOUNT_ICONS } from '@/lib/icons'
 import { centavosToInput, parseBRL } from '@/lib/money'
+import { useOnline } from '@/lib/offline'
 import { ACCOUNT_TYPES, type Account, type AccountInput } from './api'
 
 /** Um dia do mês digitado, de 1 a 31; `null` se não for. */
@@ -65,6 +66,7 @@ function iconForType(type: string): string {
 
 export function AccountForm({ account, onSubmit }: Props) {
   const [formError, setFormError] = useState<string | null>(null)
+  const online = useOnline()
   const {
     register,
     handleSubmit,
@@ -185,7 +187,7 @@ export function AccountForm({ account, onSubmit }: Props) {
       <IconField icons={ACCOUNT_ICONS} registration={register('icon')} />
 
       {formError && <ErrorMessage>{formError}</ErrorMessage>}
-      <Button type="submit" size="lg" disabled={isSubmitting}>
+      <Button type="submit" size="lg" disabled={isSubmitting || !online}>
         {isSubmitting ? 'Salvando…' : account ? 'Salvar' : 'Criar conta'}
       </Button>
     </form>

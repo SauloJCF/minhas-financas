@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { today } from '@/lib/dates'
 import { dbErrorMessage } from '@/lib/db'
 import { centavosToInput, parseBRL } from '@/lib/money'
+import { useOnline } from '@/lib/offline'
 import type { Transfer, TransferInput } from './api'
 
 const transferSchema = z
@@ -42,6 +43,7 @@ export function TransferForm({ transfer, accounts, onSubmit }: Props) {
       !account.archived || account.id === transfer?.from_account_id || account.id === transfer?.to_account_id,
   )
 
+  const online = useOnline()
   const {
     register,
     handleSubmit,
@@ -115,7 +117,7 @@ export function TransferForm({ transfer, accounts, onSubmit }: Props) {
       />
 
       {formError && <ErrorMessage>{formError}</ErrorMessage>}
-      <Button type="submit" size="lg" disabled={isSubmitting}>
+      <Button type="submit" size="lg" disabled={isSubmitting || !online}>
         {isSubmitting ? 'Salvando…' : transfer ? 'Salvar' : 'Transferir'}
       </Button>
     </form>
