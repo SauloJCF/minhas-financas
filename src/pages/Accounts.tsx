@@ -4,10 +4,11 @@ import { ACCOUNT_TYPES, useAccounts, type Account } from '@/accounts/api'
 import { ErrorMessage, LoadingMessage } from '@/components/FormPage'
 import { ListRow } from '@/components/ListRow'
 import { Money } from '@/components/Money'
+import { useFormatBRL } from '@/lib/hidden-values'
 import { Button } from '@/components/ui/button'
-import { formatBRL } from '@/lib/money'
 
 function AccountRow({ account }: { account: Account }) {
+  const formatBRL = useFormatBRL()
   return (
     <ListRow
       to={`/contas/${account.id}`}

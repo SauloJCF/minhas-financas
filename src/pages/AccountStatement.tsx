@@ -9,10 +9,12 @@ import { Money } from '@/components/Money'
 import { MonthNav } from '@/components/MonthNav'
 import { Button } from '@/components/ui/button'
 import { formatDate } from '@/lib/dates'
-import { formatBRL } from '@/lib/money'
 import { useMonthParam } from '@/lib/month-param'
+import { useFormatBRL, useValuesHidden } from '@/lib/hidden-values'
 
 function EntryRow({ entry, otherAccountName }: { entry: StatementEntry; otherAccountName?: string }) {
+  const formatBRL = useFormatBRL()
+  const hidden = useValuesHidden()
   const isTransfer = entry.kind === 'transfer'
   const title = isTransfer
     ? `Transferência ${entry.amount < 0 ? 'para' : 'de'} ${otherAccountName ?? 'outra conta'}`
@@ -35,12 +37,12 @@ function EntryRow({ entry, otherAccountName }: { entry: StatementEntry; otherAcc
         <span
           className={cn(
             'tabular-nums',
-            entry.amount > 0 && 'text-primary',
+            !hidden && entry.amount > 0 && 'text-primary',
             // Pendente ainda não mexeu no saldo.
             !entry.settled && 'text-muted-foreground',
           )}
         >
-          {entry.amount > 0 && '+'}
+          {!hidden && entry.amount > 0 && '+'}
           {formatBRL(entry.amount)}
         </span>
       </Link>

@@ -1,5 +1,5 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { formatBRL } from '@/lib/money'
+import { useFormatBRL, useValuesHidden } from '@/lib/hidden-values'
 
 /** Uma série do gráfico: a chave do valor em cada linha, o nome e a cor. */
 export type ChartSeries = { key: string; name: string; color: string }
@@ -21,6 +21,8 @@ const compact = new Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFra
  * Exportação padrão porque o gráfico é carregado sob demanda (o Recharts é pesado).
  */
 export default function ReportChart({ data, series, stacked = false }: Props) {
+  const formatBRL = useFormatBRL()
+  const hidden = useValuesHidden()
   return (
     <div aria-hidden className="h-56">
       <ResponsiveContainer width="100%" height="100%">
@@ -34,11 +36,11 @@ export default function ReportChart({ data, series, stacked = false }: Props) {
             interval="preserveStartEnd"
           />
           <YAxis
-            width={44}
+            width={hidden ? 8 : 44}
             axisLine={false}
             tickLine={false}
             tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }}
-            tickFormatter={(value) => compact.format(Number(value) / 100)}
+            tickFormatter={(value) => (hidden ? '' : compact.format(Number(value) / 100))}
           />
           <Tooltip
             cursor={{ fill: 'var(--muted)' }}

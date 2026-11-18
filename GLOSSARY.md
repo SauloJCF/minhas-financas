@@ -14,6 +14,10 @@ _Avoid_: Conta (de acesso), cliente
 A tela do próprio usuário: seu e-mail, sua senha e as configurações do assistente.
 _Avoid_: Conta, minha conta
 
+**Valores ocultos**:
+Estado, por aparelho, em que todo valor em reais das telas de consulta aparece como `R$ •••••` até o usuário voltar a mostrá-los. Fica no botão do olho ao lado da marca (barra no celular, menu no desktop). Onde o usuário age sobre o valor (formulários, confirmações, assistente) e na exportação, o valor continua visível.
+_Avoid_: Modo privado, modo discreto
+
 **Convite**:
 Única forma de alguém se tornar usuário: um e-mail enviado pelo administrador, com um link para criar a senha.
 _Avoid_: Cadastro, registro, inscrição

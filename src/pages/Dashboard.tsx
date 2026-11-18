@@ -5,10 +5,10 @@ import { useCategories } from '@/categories/api'
 import { ErrorMessage, LoadingMessage } from '@/components/FormPage'
 import { IconBadge } from '@/components/IconBadge'
 import { Money } from '@/components/Money'
+import { useFormatBRL } from '@/lib/hidden-values'
 import { MonthNav } from '@/components/MonthNav'
 import { cn } from 'cn'
 import { budgetUsage, expensesByCategory, monthTotals } from '@/dashboard/summary'
-import { formatBRL } from '@/lib/money'
 import { useMonthParam } from '@/lib/month-param'
 import { useTransactions } from '@/transactions/api'
 import { TransactionRow } from '@/transactions/TransactionRow'
@@ -30,6 +30,7 @@ function Tile({ label, children }: { label: string; children: React.ReactNode })
 
 /** A tela inicial: os saldos de agora e a visão do mês selecionado. */
 export function Dashboard() {
+  const formatBRL = useFormatBRL()
   const [month, setMonth] = useMonthParam()
   const accounts = useAccounts()
   const categories = useCategories()

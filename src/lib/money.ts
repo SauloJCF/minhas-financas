@@ -8,6 +8,9 @@ export function formatBRL(centavos: number): string {
   return brl.format(centavos / 100)
 }
 
+/** Como todo valor aparece enquanto os valores estão ocultos: igual para todos, sem sinal. */
+export const HIDDEN_MONEY = 'R$ •••••'
+
 /** 123456 -> "1.234,56", para preencher um campo de valor. */
 export function centavosToInput(centavos: number): string {
   return decimal.format(centavos / 100)

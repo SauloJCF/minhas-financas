@@ -1,5 +1,5 @@
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { formatBRL } from '@/lib/money'
+import { useFormatBRL } from '@/lib/hidden-values'
 import type { CategoryTotal } from './summary'
 
 const ROW_HEIGHT = 32
@@ -12,6 +12,7 @@ const ROW_HEIGHT = 32
  * Exportação padrão porque o gráfico é carregado sob demanda (o Recharts é pesado).
  */
 export default function ExpensesChart({ data }: { data: CategoryTotal[] }) {
+  const formatBRL = useFormatBRL()
   return (
     <div aria-hidden style={{ height: data.length * ROW_HEIGHT }}>
       <ResponsiveContainer width="100%" height="100%">
