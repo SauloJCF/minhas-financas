@@ -1,6 +1,7 @@
 import { ChartColumn, House, Receipt, Tags, User, Wallet, type LucideIcon } from 'lucide-react'
 import { Link, NavLink, Outlet } from 'react-router'
 import { cn } from 'cn'
+import { HideValuesButton } from '@/components/HideValuesButton'
 import { OfflineBanner } from '@/components/OfflineBanner'
 
 type NavItem = {
@@ -39,15 +40,19 @@ function Brand({ className }: { className?: string }) {
 export function AppLayout() {
   return (
     <div className="flex min-h-dvh flex-col md:flex-row">
-      <header className="border-b px-4 py-3 md:hidden">
+      <header className="flex items-center justify-between border-b px-4 py-3 md:hidden">
         <Brand className="flex" />
+        <HideValuesButton />
       </header>
 
       <nav
         aria-label="Principal"
         className="fixed inset-x-0 bottom-0 z-10 flex border-t bg-background pb-[env(safe-area-inset-bottom)] md:sticky md:inset-x-auto md:top-0 md:h-dvh md:w-56 md:shrink-0 md:flex-col md:gap-1 md:border-t-0 md:border-r md:p-4"
       >
-        <Brand className="mb-5 hidden px-3 md:flex" />
+        <div className="mb-5 hidden items-center justify-between gap-2 px-3 md:flex">
+          <Brand className="flex" />
+          <HideValuesButton />
+        </div>
         {NAV_ITEMS.map(({ label, Icon, to }) =>
           to ? (
             <NavLink

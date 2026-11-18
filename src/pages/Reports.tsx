@@ -4,10 +4,10 @@ import { cn } from 'cn'
 import { useCategories } from '@/categories/api'
 import { ErrorMessage, LoadingMessage } from '@/components/FormPage'
 import { currentMonth, formatMonth, monthRange } from '@/lib/dates'
-import { formatBRL } from '@/lib/money'
 import type { ChartSeries } from '@/reports/ReportChart'
 import { expensesByCategoryAndMonth, monthsEndingAt, OTHER, totalsByMonth } from '@/reports/summary'
 import { useTransactionsBetween } from '@/transactions/api'
+import { useFormatBRL, useValuesHidden } from '@/lib/hidden-values'
 
 // O Recharts é pesado: só é baixado quando há o que desenhar.
 const ReportChart = lazy(() => import('@/reports/ReportChart'))
@@ -36,6 +36,8 @@ const cellClass = 'py-1.5 pl-3 text-right tabular-nums whitespace-nowrap'
 
 /** Comparativos entre meses: receitas x despesas e despesas por categoria. */
 export function Reports() {
+  const formatBRL = useFormatBRL()
+  const hidden = useValuesHidden()
   const [params, setParams] = useSearchParams()
   const requested = Number(params.get('meses'))
   const period = PERIODS.includes(requested) ? requested : DEFAULT_PERIOD
@@ -133,7 +135,7 @@ export function Reports() {
                       </th>
                       <td className={cellClass}>{formatBRL(row.income)}</td>
                       <td className={cellClass}>{formatBRL(row.expense)}</td>
-                      <td className={cn(cellClass, row.result < 0 && 'text-destructive')}>{formatBRL(row.result)}</td>
+                      <td className={cn(cellClass, !hidden && row.result < 0 && 'text-destructive')}>{formatBRL(row.result)}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -5,12 +5,13 @@ import { ErrorMessage, LoadingMessage } from '@/components/FormPage'
 import { MonthNav } from '@/components/MonthNav'
 import { Button } from '@/components/ui/button'
 import { formatDate } from '@/lib/dates'
-import { formatBRL } from '@/lib/money'
+import { useFormatBRL } from '@/lib/hidden-values'
 import { useMonthParam } from '@/lib/month-param'
 import { useTransfers } from '@/transfers/api'
 
 /** As transferências de um mês. */
 export function Transfers() {
+  const formatBRL = useFormatBRL()
   const [month, setMonth] = useMonthParam()
   const transfers = useTransfers(month)
   const accounts = useAccounts()

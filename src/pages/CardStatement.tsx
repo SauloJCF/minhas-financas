@@ -19,6 +19,7 @@ import { formatDate, isMonth, today } from '@/lib/dates'
 import { dbErrorMessage } from '@/lib/db'
 import { formatBRL } from '@/lib/money'
 import { installmentLabel, useSeriesMap, type Transaction } from '@/transactions/api'
+import { useFormatBRL, useValuesHidden } from '@/lib/hidden-values'
 import { useOnline } from '@/lib/offline'
 
 const shortDate = (date: string) => formatDate(date).slice(0, 5)
@@ -27,6 +28,8 @@ const fieldClass =
   'h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2 py-1 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30'
 
 function StatementRow({ transaction }: { transaction: Transaction }) {
+  const formatMoney = useFormatBRL()
+  const hidden = useValuesHidden()
   const series = useSeriesMap().data?.get(transaction.group_id ?? '')
   const installment = installmentLabel(transaction, series)
   const refund = transaction.type === 'income'
@@ -46,9 +49,9 @@ function StatementRow({ transaction }: { transaction: Transaction }) {
             {!transaction.paid_at && ' · Pendente'}
           </span>
         </span>
-        <span className={cn('tabular-nums', refund && 'text-primary')}>
-          {refund && '-'}
-          {formatBRL(transaction.amount)}
+        <span className={cn('tabular-nums', !hidden && refund && 'text-primary')}>
+          {!hidden && refund && '-'}
+          {formatMoney(transaction.amount)}
         </span>
       </Link>
     </li>
@@ -139,6 +142,7 @@ function PayStatement({ account, sources, period, total }: PayProps) {
 
 /** A fatura de uma conta cartão: os lançamentos de um ciclo de fechamento, e o pagamento. */
 export function CardStatement() {
+  const formatMoney = useFormatBRL()
   const { id = '' } = useParams()
   const [params, setParams] = useSearchParams()
   const accounts = useAccounts()
@@ -202,7 +206,7 @@ export function CardStatement() {
       <dl className="grid grid-cols-2 gap-2">
         <div className="rounded-xl border p-3">
           <dt className="text-xs text-muted-foreground">Total da fatura</dt>
-          <dd className="text-lg font-semibold tabular-nums">{formatBRL(total)}</dd>
+          <dd className="text-lg font-semibold tabular-nums">{formatMoney(total)}</dd>
         </div>
         <div className="rounded-xl border p-3">
           <dt className="text-xs text-muted-foreground">{closed ? 'Fechada' : 'Aberta'}</dt>

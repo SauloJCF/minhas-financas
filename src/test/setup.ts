@@ -2,6 +2,7 @@ import '@testing-library/jest-dom/vitest'
 import { onlineManager } from '@tanstack/react-query'
 import { cleanup, configure } from '@testing-library/react'
 import { afterEach, beforeEach, vi } from 'vitest'
+import { setValuesHidden } from '@/lib/hidden-values'
 
 // O service worker não existe no jsdom; os testes usam um registro inerte.
 vi.mock('virtual:pwa-register/react', () => ({
@@ -39,5 +40,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup()
+  // O estado dos valores ocultos mora no módulo e no localStorage: cada teste começa visível.
+  setValuesHidden(false)
   onlineManager.setOnline(true)
 })

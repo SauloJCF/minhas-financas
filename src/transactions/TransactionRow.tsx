@@ -3,9 +3,9 @@ import { Link } from 'react-router'
 import { cn } from 'cn'
 import { useCardAccountIds } from '@/accounts/api'
 import { formatDate, today } from '@/lib/dates'
-import { formatBRL } from '@/lib/money'
 import { useOnline } from '@/lib/offline'
 import { installmentLabel, statusOf, useSeriesMap, useSetPaid, type Transaction } from './api'
+import { useFormatBRL, useValuesHidden } from '@/lib/hidden-values'
 
 type RowProps = {
   transaction: Transaction
@@ -14,6 +14,8 @@ type RowProps = {
 }
 
 export function TransactionRow({ transaction, accountName, categoryName }: RowProps) {
+  const formatBRL = useFormatBRL()
+  const hidden = useValuesHidden()
   const setPaid = useSetPaid()
   const online = useOnline()
   const series = useSeriesMap().data?.get(transaction.group_id ?? '')
@@ -59,8 +61,8 @@ export function TransactionRow({ transaction, accountName, categoryName }: RowPr
           </span>
         </span>
         <span className="text-right">
-          <span className={cn('block tabular-nums', income && 'text-primary')}>
-            {income ? '+' : '-'}
+          <span className={cn('block tabular-nums', !hidden && income && 'text-primary')}>
+            {!hidden && (income ? '+' : '-')}
             {formatBRL(transaction.amount)}
           </span>
           <span
