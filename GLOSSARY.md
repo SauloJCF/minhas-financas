@@ -106,6 +106,16 @@ _Avoid_: Token, senha da IA, API key
 O modelo de IA que o assistente usa, escolhido pelo usuário entre os que o OpenRouter oferece. Pode ser gratuito ou pago.
 _Avoid_: IA, motor, provedor
 
+### Tickets
+
+**Ticket**:
+Pedido de um usuário para mudar o próprio app: uma melhoria ou uma correção. Um agente de IA avalia o ticket, e só é implementado depois que o administrador o libera.
+_Avoid_: Pedido, chamado, solicitação, sugestão, feedback
+
+**Situação do ticket**:
+Em que ponto o ticket está: em análise, aguardando você (há uma pergunta para o usuário), aprovado, em implementação, concluído ou recusado. Um ticket concluído ou recusado está encerrado; os demais estão em andamento.
+_Avoid_: Status, estado, fase
+
 ### Relatórios
 
 **Relatório**:
