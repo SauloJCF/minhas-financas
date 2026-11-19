@@ -46,6 +46,31 @@ IndexedDB por até 7 dias. Uma faixa avisa de quando são os dados. Salvar, paga
 precisam de conexão (ADR 0010). Para testar, rode `npm run build && npm run preview`, abra o
 app, navegue pelas telas e marque "Offline" na aba Network do DevTools.
 
+### Tickets (Edge Function)
+
+Os tickets abertos pelo app viram issues deste repositório, por meio da Edge Function
+`supabase/functions/tickets` (ADR 0011). Sem os secrets abaixo, a função local responde
+"A integração com o GitHub não está configurada" e não chama o GitHub.
+
+Para testar de ponta a ponta, **use um repositório descartável seu, nunca este**:
+
+1. Crie um repositório vazio (por exemplo `minhas-financas-sandbox`), com os labels `ticket`,
+   `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`, `bug` e
+   `enhancement`.
+2. Crie um PAT fino só para ele (ver "Token do GitHub" abaixo) e ponha em
+   `supabase/functions/.env` (já ignorado pelo git):
+
+   ```
+   GH_TICKETS_TOKEN=github_pat_...
+   GH_TICKETS_REPO=seu-usuario/minhas-financas-sandbox
+   ```
+3. Rode `npx supabase functions serve --env-file supabase/functions/.env` com `npm run dev` aberto.
+
+Variáveis opcionais: `GH_TICKETS_ADMIN` (login do administrador; padrão: o dono do repositório)
+e `GH_TICKETS_AGENTS` (logins do agente, separados por vírgula; padrão
+`claude[bot],github-actions[bot]`). A lógica da função está em `supabase/functions/tickets/core.ts`
+e é testada por `npm test`, sem chamar o GitHub.
+
 ### Servidor MCP local
 
 `mcp/server.ts` é um servidor [MCP](https://modelcontextprotocol.io) que deixa um cliente
@@ -113,12 +138,30 @@ Crie o repositório e, em **Settings > Secrets and variables > Actions**, cadast
 | Secret | `SUPABASE_DB_PASSWORD` | senha do banco |
 | Secret | `CLOUDFLARE_API_TOKEN` | token da Cloudflare |
 | Secret | `CLOUDFLARE_ACCOUNT_ID` | Account ID da Cloudflare |
+| Secret | `TICKETS_GITHUB_TOKEN` | PAT fino do GitHub, para os tickets (ver abaixo) |
 | Variable | `SUPABASE_PROJECT_ID` | Project ID do Supabase |
 | Variable | `VITE_SUPABASE_URL` | Project URL do Supabase |
 | Variable | `VITE_SUPABASE_ANON_KEY` | chave anon/publishable |
 
 A chave anon é pública por desenho (vai embutida no front); quem protege os dados é o RLS.
 As outras quatro são segredos e nunca entram no repositório.
+
+#### Token do GitHub (tickets)
+
+Para os tickets funcionarem em produção, o administrador cria um PAT e o cadastra como secret:
+
+1. Em <https://github.com/settings/personal-access-tokens/new> (fine-grained token), escolha
+   **Only select repositories** e marque só este repositório.
+2. Em **Repository permissions**, dê **Issues: Read and write** e **Pull requests: Read-only**
+   (o resto fica sem acesso). Defina a validade; ao expirar, crie outro e atualize o secret.
+3. Cadastre o valor em **Settings > Secrets and variables > Actions** com o nome
+   `TICKETS_GITHUB_TOKEN`. A cada deploy, o `deploy.yml` o copia para o secret
+   `GH_TICKETS_TOKEN` da função no Supabase (junto com `GH_TICKETS_REPO`, o próprio repositório).
+4. Confira que os labels `ticket`, `needs-triage`, `needs-info`, `ready-for-agent`,
+   `ready-for-human`, `wontfix`, `bug` e `enhancement` existem no repositório. O `ticket` precisa
+   ser criado à mão.
+
+O token nunca vai para o front, para o banco nem para um log.
 
 Em **Settings > Branches**, proteja a `main` exigindo o check **Lint, tipos, testes e build**.
 

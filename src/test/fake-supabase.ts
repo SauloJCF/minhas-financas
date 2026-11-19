@@ -13,6 +13,11 @@ export const db = {
   /** Erro devolvido pela próxima operação, por chave "operação:tabela" (ex.: "delete:accounts"). */
   errors: {} as Record<string, { code: string } | undefined>,
   session: { user: { id: 'ana', email: 'ana@example.com' } } as { user: { id: string; email: string } } | null,
+  /** Edge Functions: cada uma recebe o corpo do pedido e devolve `{ data }` ou `{ error }` (com `status`). */
+  functions: {} as Record<
+    string,
+    (body: Record<string, unknown>) => { data: unknown } | { error: { code: string; message: string; status: number } }
+  >,
   nextId: 1,
 
   reset() {
@@ -85,6 +90,7 @@ export const db = {
       ],
     }
     db.errors = {}
+    db.functions = {}
     db.session = { user: { id: 'ana', email: 'ana@example.com' } }
     db.nextId = 1
   },
@@ -302,6 +308,23 @@ async function rpc(name: string, args: Record<string, unknown>): Promise<Result>
   return { data: functions[name](args), error: null }
 }
 
+/** Como o supabase-js: erro HTTP da função vem com a `Response` em `context`. */
+const edgeFunctions = {
+  invoke: vi.fn(async (name: string, options: { body: Record<string, unknown> }) => {
+    const handler = db.functions[name]
+    if (!handler) throw new Error(`função inesperada: ${name}`)
+    const result = handler(options.body)
+    if ('error' in result) {
+      const { status, ...error } = result.error
+      return {
+        data: null,
+        error: { name: 'FunctionsHttpError', context: new Response(JSON.stringify({ error }), { status }) },
+      }
+    }
+    return { data: result.data, error: null }
+  }),
+}
+
 const auth = {
   onAuthStateChange: vi.fn((callback: (event: string, session: unknown) => void) => {
     queueMicrotask(() => callback('INITIAL_SESSION', db.session))
@@ -311,4 +334,4 @@ const auth = {
   signOut: vi.fn(async () => ({ error: null })),
 }
 
-export const supabase = { auth, from, rpc }
+export const supabase = { auth, from, rpc, functions: edgeFunctions }
