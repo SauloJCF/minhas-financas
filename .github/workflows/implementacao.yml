@@ -121,7 +121,7 @@ jobs:
             <!-- /resposta-ao-usuario -->
           STOP_NOTICE: |
             <!-- resposta-ao-usuario -->
-            Não consegui concluir esta mudança sozinho. O administrador vai avaliar o seu ticket.
+            Esta mudança precisa de uma decisão do administrador, que vai avaliar o seu ticket. Você não precisa fazer nada agora.
             <!-- /resposta-ao-usuario -->
         run: |
           pr=$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$BRANCH" --state open --json number --jq '.[0].number // empty')
