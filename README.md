@@ -103,6 +103,12 @@ O servidor roda direto pelo Node, sem build. A lógica que não depende do banco
 - **Push na `main`**: `.github/workflows/deploy.yml` roda o CI, aplica as migrations
   no Supabase e só então publica o front na Cloudflare.
 
+- **Ticket com `needs-triage`**: `.github/workflows/triagem.yml` aciona um agente de IA
+  (Claude Code Action, modelo Sonnet 5.5, secret `CLAUDE_CODE_OAUTH_TOKEN`) que lê o ticket e
+  comenta na issue com a resposta ao usuário e a análise técnica. Ele só lê e comenta: quem
+  aplica os labels é o administrador. No máximo 3 triagens por ticket. O escopo do agente está
+  em `docs/agents/escopo-do-agente.md`.
+
 ## Configuração inicial (uma vez)
 
 ### 1. Supabase
