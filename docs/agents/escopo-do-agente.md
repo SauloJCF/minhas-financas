@@ -65,6 +65,10 @@ O comentário termina com uma última linha, fora dos marcadores de resposta, co
 - `needs-info`: o **workflow** aplica sozinho, trocando `needs-triage` por `needs-info`. Assim o usuário vê "Aguardando você" logo, e a resposta dele volta a pôr `needs-triage` e dispara nova triagem.
 - `ready-for-agent` e `ready-for-human`: só o administrador aplica, depois de ler a análise.
 
+### Limite de triagens
+
+No máximo 3 triagens por ticket. Quando o usuário responde depois disso, o workflow não chama o agente: publica uma vez um aviso fixo para o usuário (marcado com `<!-- limite-triagem -->`, entre os marcadores de resposta), dizendo que o administrador vai avaliar a conversa. A partir daí, a issue espera o administrador, e novas respostas não disparam nada.
+
 ### Marcador da triagem
 
 Todo comentário de triagem começa com `<!-- triagem-ia -->`. O workflow conta esses comentários para limitar a 3 triagens por ticket.

@@ -161,6 +161,20 @@ describe('conversation', () => {
     ])
   })
 
+  test('aviso de limite de triagens (workflow, sem agente): a resposta ao usuário aparece', () => {
+    const notice = [
+      '<!-- limite-triagem -->',
+      REPLY_START,
+      'Recebi sua mensagem. O administrador vai avaliar a conversa e responder por aqui.',
+      REPLY_END,
+    ].join('\n')
+    const withBot: Actors = { admin: 'saulo', agents: ['github-actions[bot]'] }
+    const messages = conversation(issue(), [comment(1, 'github-actions[bot]', notice)], withBot)
+    expect(messages.filter((m) => m.from === 'agent').map((m) => m.body)).toEqual([
+      'Recebi sua mensagem. O administrador vai avaliar a conversa e responder por aqui.',
+    ])
+  })
+
   test('comentário de outra pessoa fica de fora, mesmo imitando os marcadores', () => {
     const forged = [
       comment(1, 'intruso', 'Oi, eu também quero isso'),
