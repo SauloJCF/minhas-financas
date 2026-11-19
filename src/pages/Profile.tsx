@@ -1,5 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
+import { ChevronRight } from 'lucide-react'
 import { useState } from 'react'
+import { Link } from 'react-router'
 import { AssistantSettingsSection } from '@/assistant/AssistantSettingsForm'
 import { useAuth } from '@/auth/auth-context'
 import { NewPasswordForm } from '@/components/NewPasswordForm'
@@ -45,6 +47,14 @@ export function Profile() {
       </section>
 
       <AssistantSettingsSection />
+
+      <Link to="/tickets" className="flex items-center gap-3 rounded-xl border px-3 py-3 hover:bg-muted">
+        <span className="grid flex-1 gap-0.5">
+          <span className="font-medium">Tickets</span>
+          <span className="text-xs text-muted-foreground">Peça uma melhoria ou relate um problema</span>
+        </span>
+        <ChevronRight aria-hidden className="size-4 text-muted-foreground" />
+      </Link>
 
       <Button variant="outline" onClick={() => void signOut()}>
         Sair

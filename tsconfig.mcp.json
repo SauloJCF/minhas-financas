@@ -20,5 +20,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["mcp"]
+  "include": ["mcp", "supabase/functions/tickets/core.ts", "supabase/functions/tickets/github.ts", "supabase/functions/tickets/*.test.ts"]
 }

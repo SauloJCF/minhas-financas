@@ -65,6 +65,20 @@ export type Database = {
                   Relationships: [
                     
                   ]
+                },"tickets": {
+                  Row: {
+                    "created_at": string,"id": string,"issue_number": number,"title": string,"type": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"issue_number": number,"title": string,"type": string,"user_id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"issue_number"?: number,"title"?: string,"type"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+
+                  ]
                 },"transaction_series": {
                   Row: {
                     "created_at": string,"frequency": Database["public"]['Enums']["series_frequency"],"id": string,"installment_count": number | null,"kind": Database["public"]['Enums']["series_kind"],"start_date": string,"user_id": string

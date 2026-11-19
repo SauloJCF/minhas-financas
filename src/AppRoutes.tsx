@@ -14,6 +14,9 @@ import { Login } from '@/pages/Login'
 import { Profile } from '@/pages/Profile'
 import { Reports } from '@/pages/Reports'
 import { SetPassword } from '@/pages/SetPassword'
+import { TicketDetail } from '@/pages/TicketDetail'
+import { TicketNew } from '@/pages/TicketNew'
+import { Tickets } from '@/pages/Tickets'
 import { TransactionEdit } from '@/pages/TransactionEdit'
 import { Transactions } from '@/pages/Transactions'
 import { TransactionsExport } from '@/pages/TransactionsExport'
@@ -52,6 +55,9 @@ export function AppRoutes() {
           <Route path="/relatorios" element={<Reports />} />
           <Route path="/assistente" element={<Assistant />} />
           <Route path="/perfil" element={<Profile />} />
+          <Route path="/tickets" element={<Tickets />} />
+          <Route path="/tickets/novo" element={<TicketNew />} />
+          <Route path="/tickets/:id" element={<TicketDetail />} />
         </Route>
       </Route>
 
