@@ -1,0 +1,49 @@
+name: Aviso de conclusão do ticket
+
+# Quando um ticket é fechado como concluído (normalmente pelo merge da PR com `Closes #n`),
+# publica um aviso fixo para o usuário, com o resumo escrito pelo agente na descrição da PR.
+# Sem agente e sem gastar cota. Recusa (`not_planned`) não gera aviso.
+on:
+  issues:
+    types: [closed]
+
+permissions:
+  issues: write
+  pull-requests: read
+
+jobs:
+  avisar:
+    name: Avisar o usuário
+    if: >-
+      github.event.issue.state_reason == 'completed'
+      && contains(github.event.issue.labels.*.name, 'ticket')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ISSUE_NUMBER: ${{ github.event.issue.number }}
+    steps:
+      - name: Publicar o aviso
+        run: |
+          # Um aviso por ticket, mesmo que a issue seja reaberta e fechada de novo.
+          if gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$ISSUE_NUMBER/comments" --jq '.[].body' | grep -qF '<!-- ticket-concluido -->'; then
+            echo "Aviso já publicado."
+            exit 0
+          fi
+          # O resumo vem da PR mesclada da branch do agente, entre os marcadores. Sem PR do
+          # agente (fechado à mão) ou sem o trecho, vai só o texto fixo.
+          body=$(gh pr list --repo "$GITHUB_REPOSITORY" --head "claude/ticket-$ISSUE_NUMBER" --state merged --json body --jq '.[0].body // ""')
+          summary=$(printf '%s\n' "$body" \
+            | sed -n '/<!-- resumo-ao-usuario -->/,/<!-- \/resumo-ao-usuario -->/p' \
+            | sed '1d;$d' | sed 's/<!--//g; s/-->//g' | head -c 1000)
+          {
+            echo '<!-- ticket-concluido -->'
+            echo '<!-- resposta-ao-usuario -->'
+            echo 'Seu ticket foi concluído: a mudança foi aprovada e será publicada no app em instantes.'
+            if [ -n "$summary" ]; then
+              echo
+              printf '%s\n' "$summary"
+            fi
+            echo '<!-- /resposta-ao-usuario -->'
+          } > "$RUNNER_TEMP/aviso.md"
+          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body-file "$RUNNER_TEMP/aviso.md"
