@@ -105,8 +105,9 @@ O servidor roda direto pelo Node, sem build. A lógica que não depende do banco
 
 - **Ticket com `needs-triage`**: `.github/workflows/triagem.yml` aciona um agente de IA
   (Claude Code Action, modelo Sonnet 5.5, secret `CLAUDE_CODE_OAUTH_TOKEN`) que lê o ticket e
-  comenta na issue com a resposta ao usuário e a análise técnica. Ele só lê e comenta: quem
-  aplica os labels é o administrador. No máximo 3 triagens por ticket. O escopo do agente está
+  comenta na issue com a resposta ao usuário e a análise técnica. Ele só lê e comenta. Se pedir
+  informação ao usuário, o workflow aplica `needs-info` sozinho; `ready-for-agent` e
+  `ready-for-human` são do administrador. No máximo 3 triagens por ticket. O escopo do agente está
   em `docs/agents/escopo-do-agente.md`.
 
 ## Configuração inicial (uma vez)
