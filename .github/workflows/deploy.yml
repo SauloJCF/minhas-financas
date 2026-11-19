@@ -35,9 +35,9 @@ jobs:
       # --remote: sem ele, a CLI 3.x mira o banco local. --yes: sem prompt no CI.
       - run: npx supabase db push --remote --yes
       # A função usa a tabela `tickets`, por isso só sobe depois das migrations (ADR 0011).
-      - run: npx supabase functions deploy tickets
+      - run: npx supabase functions deploy tickets --yes
       # O PAT do GitHub vive só aqui, no GitHub Actions, e no Supabase; nunca no front.
-      - run: npx supabase secrets set GH_TICKETS_TOKEN="$GH_TICKETS_TOKEN" GH_TICKETS_REPO="$GITHUB_REPOSITORY"
+      - run: npx supabase secrets set --yes GH_TICKETS_TOKEN="$GH_TICKETS_TOKEN" GH_TICKETS_REPO="$GITHUB_REPOSITORY"
         env:
           GH_TICKETS_TOKEN: ${{ secrets.TICKETS_GITHUB_TOKEN }}
 
