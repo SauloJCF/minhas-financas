@@ -20,5 +20,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["mcp", "supabase/functions/tickets/core.ts", "supabase/functions/tickets/github.ts", "supabase/functions/tickets/*.test.ts"]
+  "include": ["mcp", "scripts/guard-claude-pr.ts", "scripts/guard-claude-pr.test.ts", "supabase/functions/tickets/core.ts", "supabase/functions/tickets/github.ts", "supabase/functions/tickets/*.test.ts"]
 }

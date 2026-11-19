@@ -45,15 +45,19 @@ test('lê a issue no formato do core', async () => {
   })
 })
 
-test('PR aberta do administrador na timeline conta; PR fechada ou de outra pessoa, não', async () => {
+test('PR aberta do administrador ou do agente na timeline conta; PR fechada ou de outra pessoa, não', async () => {
   const event = (state: string, login: string, pr = true) => ({
     event: 'cross-referenced',
     source: { issue: { state, user: { login }, ...(pr ? { pull_request: {} } : {}) } },
   })
-  const has = async (events: unknown[]) => client(() => json(events)).github.hasOpenPullRequest(1)
+  const has = async (events: unknown[]) => {
+    const github = createGithub({ token: TOKEN, repo: 'dono/sandbox', admin: 'saulo', agents: ['claude[bot]'], fetch: (async () => json(events)) as typeof globalThis.fetch })
+    return github.hasOpenPullRequest(1)
+  }
 
   expect(await has([event('open', 'saulo')])).toBe(true)
   expect(await has([event('closed', 'saulo')])).toBe(false)
+  expect(await has([event('open', 'claude[bot]')])).toBe(true)
   expect(await has([event('open', 'intruso')])).toBe(false)
   expect(await has([event('open', 'saulo', false)])).toBe(false)
   expect(await has([{ event: 'labeled' }])).toBe(false)

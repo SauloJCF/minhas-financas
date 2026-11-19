@@ -109,6 +109,10 @@ O servidor roda direto pelo Node, sem build. A lógica que não depende do banco
   informação ao usuário, o workflow aplica `needs-info` sozinho; `ready-for-agent` e
   `ready-for-human` são do administrador. No máximo 3 triagens por ticket. O escopo do agente está
   em `docs/agents/escopo-do-agente.md`.
+- **Ticket com `ready-for-agent`** (aplicado por você): `.github/workflows/implementacao.yml` aciona
+  o agente, que implementa em `claude/ticket-<n>` e abre a PR com `Closes #<n>`. Precisa do app
+  Claude instalado no repositório (para o push disparar o CI). Nas PRs `claude/…`, o job
+  `guarda-agente` do CI barra o que foge do escopo. O merge é sempre manual.
 
 ## Configuração inicial (uma vez)
 

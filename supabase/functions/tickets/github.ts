@@ -34,9 +34,13 @@ function toIssue(raw: RawIssue): GithubIssue {
   }
 }
 
-/** `repo` é "dono/nome". `admin` é o login do dono do token: só PRs dele contam como "em implementação". */
-export function createGithub(options: { token: string; repo: string; admin: string; fetch?: Fetch }): Github {
+/**
+ * `repo` é "dono/nome". Só PRs do administrador ou do agente (`agents`) contam como "em
+ * implementação": a PR de um terceiro que cita a issue não muda a situação do ticket.
+ */
+export function createGithub(options: { token: string; repo: string; admin: string; agents?: string[]; fetch?: Fetch }): Github {
   const { token, repo, admin } = options
+  const prAuthors = [admin, ...(options.agents ?? [])]
   const send = options.fetch ?? fetch
 
   async function call<T>(method: string, path: string, body?: unknown): Promise<T> {
@@ -104,7 +108,7 @@ export function createGithub(options: { token: string; repo: string; admin: stri
           event.event === 'cross-referenced' &&
           event.source?.issue?.pull_request !== undefined &&
           event.source.issue.state === 'open' &&
-          event.source.issue.user?.login === admin,
+          prAuthors.includes(event.source.issue.user?.login ?? ''),
       )
     },
   }

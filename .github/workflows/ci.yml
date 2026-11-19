@@ -45,3 +45,22 @@ jobs:
       # Só o Postgres local, já com as migrations aplicadas; os testes de RLS não usam o resto.
       - run: npx supabase db start
       - run: npm run db:test
+
+  # Só nas PRs do agente (branch `claude/…`): confere o que dá para checar mecanicamente das
+  # regras de docs/agents/escopo-do-agente.md. Nas demais PRs o job é pulado.
+  guarda-agente:
+    name: Trava das PRs do agente
+    if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'claude/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      # O script roda na versão da base, não na da PR: assim o agente não o enfraquece.
+      - run: |
+          git show "origin/${{ github.base_ref }}:scripts/guard-claude-pr.ts" > "$RUNNER_TEMP/guard-claude-pr.ts"
+          node "$RUNNER_TEMP/guard-claude-pr.ts" "origin/${{ github.base_ref }}"
