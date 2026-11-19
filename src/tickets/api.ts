@@ -50,6 +50,20 @@ export function useTickets() {
   })
 }
 
+/**
+ * Há ticket aguardando resposta do usuário? Lê a mesma consulta de `useTickets`, sem repetir a
+ * chamada. Se ela falhar (offline, sem GitHub), é `false`: o indicador só não aparece.
+ */
+export function useHasWaitingTickets(): boolean {
+  const { data } = useQuery({
+    queryKey: useUserQueryKey('tickets'),
+    queryFn: () => call<TicketView[]>({ action: 'list' }),
+    staleTime: 60_000,
+    select: (tickets) => tickets.some((ticket) => ticket.situation === 'waiting_you'),
+  })
+  return data ?? false
+}
+
 /** A conversa de um ticket. Relida a cada 30 s com a aba visível, e ao voltar para ela. */
 export function useTicket(id: string | undefined) {
   return useQuery({

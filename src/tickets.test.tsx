@@ -188,3 +188,42 @@ test('sem rede, mostra o que já carregou e desliga o envio', async () => {
   expect(screen.getByRole('button', { name: 'Enviar' })).toBeDisabled()
   expect(screen.getByText('O saldo não bate.')).toBeInTheDocument()
 })
+
+test('com ticket aguardando você, o Perfil e o item Tickets ganham a bolinha; ela some depois da resposta', async () => {
+  tickets = [ticket('t1', { situation: 'waiting_you' })]
+  const base = db.functions.tickets
+  db.functions.tickets = (body) => {
+    // Como o workflow faz: a resposta do usuário tira o ticket de "Aguardando você".
+    if (body.action === 'reply') tickets = tickets.map((item) => ({ ...item, situation: 'analysis' }))
+    return base(body)
+  }
+  const user = renderAt('/perfil')
+
+  const nav = await screen.findByRole('navigation', { name: 'Principal' })
+  expect(await within(within(nav).getByRole('link', { name: /Perfil/ })).findByText('Há tickets aguardando você')).toBeInTheDocument()
+  const ticketsLink = screen.getByRole('link', { name: /Tickets/ })
+  expect(within(ticketsLink).getByText('Há tickets aguardando você')).toBeInTheDocument()
+
+  await user.click(ticketsLink)
+  await user.click(await screen.findByRole('link', { name: /Ticket t1/ }))
+  await user.type(await screen.findByLabelText('Responder'), 'Segue a resposta.')
+  await user.click(screen.getByRole('button', { name: 'Enviar' }))
+
+  await waitFor(() => expect(screen.queryByText('Há tickets aguardando você')).not.toBeInTheDocument())
+})
+
+test('sem ticket aguardando, não há bolinha', async () => {
+  tickets = [ticket('t1')]
+  renderAt('/perfil')
+  await screen.findByRole('link', { name: /Tickets/ })
+  await waitFor(() => expect(calls.some((call) => call.action === 'list')).toBe(true))
+  expect(screen.queryByText('Há tickets aguardando você')).not.toBeInTheDocument()
+})
+
+test('se a lista falhar, não há bolinha nem erro na tela', async () => {
+  db.functions.tickets = () => ({ error: { code: 'x', message: 'falhou', status: 500 } })
+  renderAt('/perfil')
+  await screen.findByRole('link', { name: /Tickets/ })
+  expect(screen.queryByText('Há tickets aguardando você')).not.toBeInTheDocument()
+  expect(screen.queryByText('falhou')).not.toBeInTheDocument()
+})

@@ -6,13 +6,16 @@ import { AssistantSettingsSection } from '@/assistant/AssistantSettingsForm'
 import { useAuth } from '@/auth/auth-context'
 import { NewPasswordForm } from '@/components/NewPasswordForm'
 import { Button } from '@/components/ui/button'
+import { WaitingDot } from '@/components/WaitingDot'
 import { clearUserCache } from '@/lib/offline'
 import { supabase } from '@/lib/supabase'
+import { useHasWaitingTickets } from '@/tickets/api'
 
 export function Profile() {
   const { session } = useAuth()
   const [saved, setSaved] = useState(false)
   const queryClient = useQueryClient()
+  const hasWaitingTickets = useHasWaitingTickets()
 
   async function signOut() {
     // Sem rede, o Supabase não consegue encerrar a sessão no servidor; ela sai pelo menos do aparelho.
@@ -50,7 +53,10 @@ export function Profile() {
 
       <Link to="/tickets" className="flex items-center gap-3 rounded-xl border px-3 py-3 hover:bg-muted">
         <span className="grid flex-1 gap-0.5">
-          <span className="font-medium">Tickets</span>
+          <span className="flex items-center gap-2 font-medium">
+            Tickets
+            {hasWaitingTickets && <WaitingDot />}
+          </span>
           <span className="text-xs text-muted-foreground">Peça uma melhoria ou relate um problema</span>
         </span>
         <ChevronRight aria-hidden className="size-4 text-muted-foreground" />

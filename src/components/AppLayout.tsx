@@ -3,12 +3,16 @@ import { Link, NavLink, Outlet } from 'react-router'
 import { cn } from 'cn'
 import { HideValuesButton } from '@/components/HideValuesButton'
 import { OfflineBanner } from '@/components/OfflineBanner'
+import { WaitingDot } from '@/components/WaitingDot'
+import { useHasWaitingTickets } from '@/tickets/api'
 
 type NavItem = {
   label: string
   Icon: LucideIcon
   /** Sem rota, a tela ainda não existe: o item aparece desligado, guardando o lugar. */
   to?: string
+  /** Mostra a bolinha de "aguardando você" no item. */
+  waitingTickets?: boolean
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -17,7 +21,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Contas', Icon: Wallet, to: '/contas' },
   { label: 'Categorias', Icon: Tags, to: '/categorias' },
   { label: 'Relatórios', Icon: ChartColumn, to: '/relatorios' },
-  { label: 'Perfil', Icon: User, to: '/perfil' },
+  { label: 'Perfil', Icon: User, to: '/perfil', waitingTickets: true },
 ]
 
 // No celular os itens são colunas (ícone sobre o rótulo); no desktop, linhas do menu lateral.
@@ -38,6 +42,7 @@ function Brand({ className }: { className?: string }) {
  * no celular, menu lateral a partir de `md`.
  */
 export function AppLayout() {
+  const hasWaitingTickets = useHasWaitingTickets()
   return (
     <div className="flex min-h-dvh flex-col md:flex-row">
       <header className="flex items-center justify-between border-b px-4 py-3 md:hidden">
@@ -53,7 +58,7 @@ export function AppLayout() {
           <Brand className="flex" />
           <HideValuesButton />
         </div>
-        {NAV_ITEMS.map(({ label, Icon, to }) =>
+        {NAV_ITEMS.map(({ label, Icon, to, waitingTickets }) =>
           to ? (
             <NavLink
               key={label}
@@ -70,6 +75,7 @@ export function AppLayout() {
             >
               <Icon aria-hidden className="size-5" />
               {label}
+              {waitingTickets && hasWaitingTickets && <WaitingDot />}
             </NavLink>
           ) : (
             <span
