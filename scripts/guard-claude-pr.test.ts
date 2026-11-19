@@ -23,6 +23,7 @@ describe('caminhos proibidos', () => {
     'src/components/NewPasswordForm.tsx',
     'supabase/templates/invite.html',
     'supabase/config.toml',
+    'scripts/guard-claude-pr.ts',
     'docs/adr/0011-edge-function-para-tickets.md',
     'docs/agents/escopo-do-agente.md',
   ])('reprova %s', (file) => {

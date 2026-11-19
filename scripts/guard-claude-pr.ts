@@ -25,6 +25,7 @@ const FORBIDDEN_PATHS: { test: (path: string) => boolean; reason: string }[] = [
       p === 'src/components/NewPasswordForm.tsx',
     reason: 'autenticação, convite e senha',
   },
+  { test: (p) => p.startsWith('scripts/'), reason: 'scripts/ (inclui esta trava)' },
   { test: (p) => p.startsWith('docs/adr/'), reason: 'ADRs' },
   { test: (p) => p.startsWith('docs/agents/'), reason: 'regras do agente (docs/agents/)' },
 ]

@@ -60,6 +60,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 24
-      # O script lê o diff contra a base da PR; ele mesmo vem da base (a PR não o altera:
-      # scripts/ não é protegido, mas o CI roda o arquivo da PR, então a revisão o cobre).
-      - run: node scripts/guard-claude-pr.ts "origin/${{ github.base_ref }}"
+      # O script roda na versão da base, não na da PR: assim o agente não o enfraquece.
+      - run: |
+          git show "origin/${{ github.base_ref }}:scripts/guard-claude-pr.ts" > "$RUNNER_TEMP/guard-claude-pr.ts"
+          node "$RUNNER_TEMP/guard-claude-pr.ts" "origin/${{ github.base_ref }}"

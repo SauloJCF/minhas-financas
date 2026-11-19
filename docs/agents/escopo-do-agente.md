@@ -72,3 +72,22 @@ No máximo 3 triagens por ticket. Quando o usuário responde depois disso, o wor
 ### Marcador da triagem
 
 Todo comentário de triagem começa com `<!-- triagem-ia -->`. O workflow conta esses comentários para limitar a 3 triagens por ticket.
+
+## Implementação
+
+Só começa quando o **administrador** aplica `ready-for-agent` num ticket (`.github/workflows/implementacao.yml`). O agente implementa na branch `claude/ticket-<n>`, roda `lint`, `typecheck`, `test` e `build` (e, se mexer no banco, `db:reset`, `db:test` e `db:types`) e abre a PR com `Closes #<n>`. O merge é sempre do administrador, e aplica as migrations em produção: o SQL é o que mais merece revisão.
+
+- **Parada por escopo**: se o ticket exigir algo de "Fora do escopo" ou passar dos limites de migration, o agente para, comenta o motivo na issue (sem os marcadores de resposta ao usuário), troca `ready-for-agent` por `ready-for-human` e não abre PR.
+- **Avisos ao usuário** são fixos e publicados pelo workflow, não pelo agente: "a mudança está pronta e aguarda a revisão" ao abrir a PR, e "o administrador vai avaliar o seu ticket" se terminar sem PR. O agente não escreve para o usuário nesta etapa.
+- **Sem repetição automática**: se falhar, o workflow comenta e troca o label por `ready-for-human`. Só roda de novo se o administrador reaplicar `ready-for-agent`.
+
+### Trava do CI
+
+Em PRs de branch `claude/…`, o job `guarda-agente` (`scripts/guard-claude-pr.ts`) falha se a PR:
+
+- mexer em `.github/`, `supabase/functions/`, `scripts/`, `docs/adr/`, `docs/agents/`, `package.json`, no lockfile ou nos arquivos de autenticação (`src/auth/`, telas de login, convite e senha, `supabase/templates/`, `supabase/config.toml`);
+- tiver migration nova com `DROP`, `TRUNCATE`, `DELETE`, `DISABLE ROW LEVEL SECURITY`, `SECURITY DEFINER`, `CREATE FUNCTION`, `CREATE TRIGGER`, ou `GRANT` para outro papel além de `authenticated` (o `GRANT … TO authenticated` é o padrão do projeto);
+- criar view sem `security_invoker = true`;
+- criar tabela sem RLS na mesma migration ou sem teste pgTAP, na própria PR, que a cite.
+
+A contagem de colunas e a regra "é bug ou não" não são checadas pelo CI: ficam com o agente e com a sua revisão.

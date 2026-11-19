@@ -36,7 +36,7 @@ function githubFromEnv() {
     .split(',')
     .map((login) => login.trim())
     .filter(Boolean)
-  return { github: createGithub({ token, repo, admin }), actors: { admin, agents } }
+  return { github: createGithub({ token, repo, admin, agents }), actors: { admin, agents } }
 }
 
 const COLUMNS = 'id, issue_number, type, title, created_at'
