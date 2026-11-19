@@ -82,6 +82,10 @@ jobs:
             5. Abra a PR com `gh pr create --base main --head ${{ env.BRANCH }}`: título curto; corpo com o
                resumo do que mudou, o que foi testado, e a linha `Closes #${{ github.event.issue.number }}`.
                Se houver migration, diga em destaque que o SQL precisa de revisão cuidadosa.
+               O corpo termina com um resumo para o usuário, entre `<!-- resumo-ao-usuario -->` e
+               `<!-- /resumo-ao-usuario -->`: de 1 a 3 frases em português simples sobre o que muda para
+               ele, sem nomes de arquivo, tabelas ou código, sem prometer nada. O workflow o copia para
+               a conversa do ticket quando a PR é mesclada.
 
             Parada por escopo: se descobrir que precisa de algo fora das regras de escopo (funções SQL,
             triggers, .github/, Edge Functions, dependências novas, autenticação, ADRs, apagar dados, ou
@@ -90,7 +94,7 @@ jobs:
             e rode `gh issue edit ${{ github.event.issue.number }} --add-label ready-for-human --remove-label ready-for-agent`.
 
             Você não faz merge, não altera labels além do descrito e não comenta nada para o usuário:
-            os avisos a ele são publicados pelo workflow.
+            os avisos a ele são publicados pelo workflow (o resumo da PR é o único texto seu que chega a ele).
 
       # Avisos ao usuário (fixos, sem agente), só em dois momentos: PR aberta, ou parada sem PR.
       # Roda mesmo se o agente falhou ou estourou o tempo. Sem repetição automática: quem

@@ -112,7 +112,8 @@ O servidor roda direto pelo Node, sem build. A lógica que não depende do banco
 - **Ticket com `ready-for-agent`** (aplicado por você): `.github/workflows/implementacao.yml` aciona
   o agente, que implementa em `claude/ticket-<n>` e abre a PR com `Closes #<n>`. Precisa do app
   Claude instalado no repositório (para o push disparar o CI). Nas PRs `claude/…`, o job
-  `guarda-agente` do CI barra o que foge do escopo. O merge é sempre manual.
+  `guarda-agente` do CI barra o que foge do escopo. O merge é sempre manual. Ao fechar o ticket como concluído, `conclusao.yml` avisa o usuário
+  (com o resumo que o agente deixou na PR).
 
 ## Configuração inicial (uma vez)
 
