@@ -118,7 +118,11 @@ O servidor roda direto pelo Node, sem build. A lógica que não depende do banco
    plano gratuito, personalizá-los exige SMTP próprio. O app entende o link padrão. Se um dia
    configurar SMTP, cole em **Authentication > Emails** os modelos de `supabase/templates/`.
 5. Anote, em **Project Settings**: o **Project ID**, a **Project URL** e a chave **anon/publishable**.
-6. Crie um token pessoal em <https://supabase.com/dashboard/account/tokens>.
+6. Crie um token pessoal em <https://supabase.com/dashboard/account/tokens>. O deploy usa o
+   mesmo token para aplicar migrations, publicar a Edge Function `tickets` e definir os secrets
+   dela (ADR 0011). Se o token tiver escopos, inclua Edge Functions (leitura e escrita) e
+   Secrets (leitura e escrita), além dos das migrations; sem eles o deploy falha com
+   "Missing required permission(s): ...". Um token com acesso total também serve.
 
 ### 2. Cloudflare
 
