@@ -51,7 +51,7 @@ beforeEach(() => {
 })
 
 test('o Perfil leva à tela Tickets, que mostra a situação de cada ticket', async () => {
-  tickets = [ticket('t2', { situation: 'waiting_you' }), ticket('t1')]
+  tickets = [ticket('t2', { situation: 'waiting_you', createdAt: '2026-11-19T12:00:00Z' }), ticket('t1')]
   const user = renderAt('/perfil')
 
   await user.click(await screen.findByRole('link', { name: /Tickets/ }))
@@ -61,6 +61,7 @@ test('o Perfil leva à tela Tickets, que mostra a situação de cada ticket', as
   expect(rows).toHaveLength(2)
   expect(within(rows[0]).getByText('Ticket t2')).toBeInTheDocument()
   expect(within(rows[0]).getByText('Aguardando você')).toBeInTheDocument()
+  expect(within(rows[0]).getByText(/abertura: 19\/11\/2026/)).toBeInTheDocument()
   expect(within(rows[1]).getByText('Em análise')).toBeInTheDocument()
 })
 
