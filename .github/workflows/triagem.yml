@@ -51,7 +51,7 @@ jobs:
             notified=$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$ISSUE_NUMBER/comments" \
               --jq '.[] | select(.user.login == "github-actions[bot]" and (.body | contains("<!-- limite-triagem -->"))) | 1' | wc -l)
             if [ "$notified" -eq 0 ]; then
-              gh issue comment "$ISSUE_NUMBER" --body "$LIMIT_NOTICE"
+              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "$LIMIT_NOTICE"
             fi
           else
             echo "run=true" >> "$GITHUB_OUTPUT"
