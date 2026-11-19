@@ -29,9 +29,18 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       ISSUE_NUMBER: ${{ github.event.issue.number }}
     steps:
-      # No máximo 3 triagens por ticket; depois, a issue espera o administrador.
+      # No máximo 3 triagens por ticket; depois, a issue espera o administrador. Na primeira
+      # vez que o limite barra uma resposta, um aviso fixo (sem agente, sem gastar cota) diz ao
+      # usuário o que acontece. Ele leva `<!-- limite-triagem -->`, e não o marcador de triagem,
+      # para não entrar na contagem nem se repetir a cada resposta.
       - name: Contar triagens anteriores
         id: previous
+        env:
+          LIMIT_NOTICE: |
+            <!-- limite-triagem -->
+            <!-- resposta-ao-usuario -->
+            Recebi sua mensagem. Já fizemos o máximo de análises automáticas para este ticket, então o administrador vai avaliar a conversa e responder por aqui.
+            <!-- /resposta-ao-usuario -->
         run: |
           count=$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$ISSUE_NUMBER/comments" \
             --jq '.[] | select(.user.login == "github-actions[bot]" and (.body | contains("<!-- triagem-ia -->"))) | 1' | wc -l)
@@ -39,6 +48,11 @@ jobs:
           if [ "$count" -ge 3 ]; then
             echo "run=false" >> "$GITHUB_OUTPUT"
             echo "::notice::A issue #$ISSUE_NUMBER já teve $count triagens; aguarda o administrador."
+            notified=$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$ISSUE_NUMBER/comments" \
+              --jq '.[] | select(.user.login == "github-actions[bot]" and (.body | contains("<!-- limite-triagem -->"))) | 1' | wc -l)
+            if [ "$notified" -eq 0 ]; then
+              gh issue comment "$ISSUE_NUMBER" --body "$LIMIT_NOTICE"
+            fi
           else
             echo "run=true" >> "$GITHUB_OUTPUT"
           fi
