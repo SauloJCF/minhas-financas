@@ -8,11 +8,6 @@ on:
   issues:
     types: [labeled]
 
-# Uma execução de agente por vez no repositório; a implementação (fatia 3) usa o mesmo grupo.
-concurrency:
-  group: agente-repositorio
-  cancel-in-progress: false
-
 # Sem escrita no conteúdo do repositório: o agente só comenta na issue.
 permissions:
   contents: read
@@ -23,6 +18,12 @@ jobs:
     name: Triagem pela IA
     # Só tickets: issues de terceiros e de roteiro não têm o label `ticket`.
     if: github.event.label.name == 'needs-triage' && contains(github.event.issue.labels.*.name, 'ticket')
+    # Uma execução de agente por vez no repositório (triagem e implementação dividem o grupo).
+    # Fica no job, e não no workflow: um evento que o `if` pula não entra no grupo. No nível
+    # do workflow, as execuções puladas (um `labeled` por label) cancelavam a real que esperava.
+    concurrency:
+      group: agente-repositorio
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
