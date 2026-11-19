@@ -40,7 +40,7 @@ Ticket que exija qualquer item abaixo vai para o administrador (`ready-for-human
 
 ## Triagem
 
-A triagem só lê: código, `GLOSSARY.md`, ADRs e a issue. Ela não altera arquivos, não aplica labels e não abre PR. O comentário da triagem tem duas partes.
+A triagem só lê: código, `GLOSSARY.md`, ADRs e a issue. Ela não altera arquivos, não aplica labels (quem aplica `needs-info` é o workflow, ver abaixo) e não abre PR. O comentário da triagem tem duas partes.
 
 1. **Resposta ao usuário**, entre os marcadores `<!-- resposta-ao-usuario -->` e `<!-- /resposta-ao-usuario -->`. É a única parte que o usuário vê no app. Em português, linguagem simples, sem jargão técnico, curta:
    - o que você entendeu do pedido e qual é o próximo passo; ou
@@ -59,6 +59,11 @@ A triagem só lê: código, `GLOSSARY.md`, ADRs e a issue. Ela não altera arqui
 | `needs-info` | Falta informação essencial, e a pergunta ao usuário está na resposta. |
 
 **Nunca** sugira `wontfix`: recusar é decisão do administrador. O agente **não aplica** labels, só sugere.
+
+O comentário termina com uma última linha, fora dos marcadores de resposta, com o label sugerido num marcador que o workflow lê: `<!-- label-sugerido: needs-info -->` (ou `ready-for-agent`, ou `ready-for-human`).
+
+- `needs-info`: o **workflow** aplica sozinho, trocando `needs-triage` por `needs-info`. Assim o usuário vê "Aguardando você" logo, e a resposta dele volta a pôr `needs-triage` e dispara nova triagem.
+- `ready-for-agent` e `ready-for-human`: só o administrador aplica, depois de ler a análise.
 
 ### Marcador da triagem
 

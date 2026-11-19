@@ -1,8 +1,9 @@
 name: Triagem de tickets
 
 # Quando um ticket recebe `needs-triage` (ao abrir, e de novo quando o usuário responde a um
-# `needs-info`), a IA avalia o ticket e comenta na issue. Ela só lê e comenta: quem aplica
-# labels é o administrador. Escopo e formato do comentário: docs/agents/escopo-do-agente.md.
+# `needs-info`), a IA avalia o ticket e comenta na issue. Ela só lê e comenta. O `needs-info`
+# sugerido é aplicado pelo último passo deste workflow; os demais labels são do administrador.
+# Escopo e formato do comentário: docs/agents/escopo-do-agente.md.
 on:
   issues:
     types: [labeled]
@@ -79,4 +80,31 @@ jobs:
             (use um heredoc para o texto), no formato de escopo-do-agente.md: começa com
             `<!-- triagem-ia -->`, depois a resposta ao usuário entre `<!-- resposta-ao-usuario -->`
             e `<!-- /resposta-ao-usuario -->`, depois a análise técnica e o label sugerido
-            (`ready-for-agent`, `ready-for-human` ou `needs-info`; nunca `wontfix`).
+            (`ready-for-agent`, `ready-for-human` ou `needs-info`; nunca `wontfix`). A última linha
+            do comentário é o marcador do label sugerido, por exemplo
+            `<!-- label-sugerido: needs-info -->`.
+
+      # `needs-info` é o único label aplicado sem o administrador: o usuário precisa ver logo
+      # que há uma pergunta. Sai `needs-triage`, para a resposta dele (que o repõe) acionar
+      # nova triagem. O label é lido do marcador do comentário que o agente acabou de publicar;
+      # `ready-for-*` fica sempre para o administrador.
+      - name: Aplicar needs-info quando sugerido
+        if: steps.previous.outputs.run == 'true'
+        env:
+          BEFORE: ${{ steps.previous.outputs.count }}
+        run: |
+          # Um comentário de triagem por linha, em base64 (o texto tem quebras de linha).
+          comments=$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$ISSUE_NUMBER/comments" \
+            --jq '.[] | select(.user.login == "github-actions[bot]" and (.body | contains("<!-- triagem-ia -->"))) | .body | @base64')
+          after=$(printf '%s\n' "$comments" | grep -c . || true)
+          # Sem um comentário novo, o último é de uma triagem antiga: não age sobre ele.
+          if [ "$after" -ne $((BEFORE + 1)) ]; then
+            echo "::warning::O agente não publicou um comentário de triagem com o marcador <!-- triagem-ia -->; nenhum label foi aplicado."
+            exit 0
+          fi
+          suggested=$(printf '%s\n' "$comments" | tail -n 1 | base64 -d \
+            | grep -o '<!-- label-sugerido: [a-z-]* -->' | tail -n 1 | cut -d' ' -f3)
+          echo "Label sugerido: ${suggested:-nenhum}"
+          if [ "$suggested" = "needs-info" ]; then
+            gh issue edit "$ISSUE_NUMBER" --add-label needs-info --remove-label needs-triage
+          fi
