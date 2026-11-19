@@ -77,7 +77,7 @@ export type Database = {
                     "created_at"?: string,"id"?: string,"issue_number"?: number,"title"?: string,"type"?: string,"user_id"?: string
                   }
                   Relationships: [
-
+                    
                   ]
                 },"transaction_series": {
                   Row: {
