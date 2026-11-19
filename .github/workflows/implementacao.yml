@@ -36,6 +36,17 @@ jobs:
       ISSUE_NUMBER: ${{ github.event.issue.number }}
       BRANCH: claude/ticket-${{ github.event.issue.number }}
     steps:
+      # Aviso fixo de que a implementação começou, sem agente e sem gastar cota. Vem antes de
+      # tudo para chegar logo após a aprovação; sem ele, o usuário fica minutos sem sinal.
+      - name: Avisar o início
+        env:
+          START_NOTICE: |
+            <!-- implementacao-inicio -->
+            <!-- resposta-ao-usuario -->
+            Seu ticket foi aprovado e a implementação começou. Aviso por aqui quando a mudança estiver pronta para revisão.
+            <!-- /resposta-ao-usuario -->
+        run: gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "$START_NOTICE"
+
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
