@@ -144,6 +144,23 @@ describe('conversation', () => {
     expect(messages.filter((m) => m.from === 'agent').map((m) => m.body)).toEqual(['Pode detalhar o erro?'])
   })
 
+  test('comentário de triagem (github-actions[bot]): só a resposta ao usuário aparece, sem análise nem marcador interno', () => {
+    const triage = [
+      '<!-- triagem-ia -->',
+      REPLY_START,
+      'Entendi: você quer ver o saldo por conta. Vamos avaliar.',
+      REPLY_END,
+      '',
+      '## Análise técnica',
+      'Arquivos: src/accounts/api.ts. Sem migration. Label sugerido: `ready-for-agent`.',
+    ].join('\n')
+    const withBot: Actors = { admin: 'saulo', agents: ['claude[bot]', 'github-actions[bot]'] }
+    const messages = conversation(issue(), [comment(1, 'github-actions[bot]', triage)], withBot)
+    expect(messages.filter((m) => m.from === 'agent').map((m) => m.body)).toEqual([
+      'Entendi: você quer ver o saldo por conta. Vamos avaliar.',
+    ])
+  })
+
   test('comentário de outra pessoa fica de fora, mesmo imitando os marcadores', () => {
     const forged = [
       comment(1, 'intruso', 'Oi, eu também quero isso'),
