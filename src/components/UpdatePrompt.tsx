@@ -12,7 +12,7 @@ export function UpdatePrompt() {
   return (
     <div
       role="alert"
-      className="fixed inset-x-4 bottom-4 mx-auto flex max-w-md items-center justify-between gap-3 rounded-lg bg-slate-800 p-4 text-left text-sm text-white shadow-lg"
+      className="fixed inset-x-4 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-20 mx-auto md:bottom-4 flex max-w-md items-center justify-between gap-3 rounded-lg bg-slate-800 p-4 text-left text-sm text-white shadow-lg"
     >
       <span>Nova versão disponível.</span>
       <span className="flex gap-2">
